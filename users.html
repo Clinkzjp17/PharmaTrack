@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmaTrack – Users</title>
+  <link rel="stylesheet" href="users.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon"></div>
+      <div class="logo-text">
+        <h3>PharmaTrack</h3>
+        <span>Admin</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">MAIN</div>
+      <a href="dashboard.html">
+        <i class="fa-solid fa-chart-bar"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="products.html">
+        <i class="fa-solid fa-capsules"></i>
+        <span>Products</span>
+      </a>
+      <a href="stocks.html">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span>Stocks</span>
+      </a>
+      <a href="users.html" class="active">
+        <i class="fa-solid fa-user"></i>
+        <span>Users</span>
+      </a>
+
+      <div class="sidebar-section-label">MONITORING</div>
+      <a href="expiry.html">
+        <i class="fa-regular fa-clock"></i>
+        <span>Expiry</span>
+      </a>
+      <a href="lowstock.html">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>Low Stock</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="avatar">AD</div>
+      <div class="admin-info">
+        <div class="name">Admin</div>
+        <div class="role">Administrator</div>
+      </div>
+      <a href="admin-login.html" class="logout-btn" title="Logout">
+        <i class="fa-solid fa-right-from-bracket"></i>
+      </a>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="page-header">
+      <div class="page-header-row">
+        <h1>Users</h1>
+        <a href="#" class="btn-add-user">
+          <i class="fa-solid fa-plus"></i> Add User
+        </a>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="label">Total Users</div>
+          <div class="value">5</div>
+          <div class="sub green">All accounts</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Users</div>
+          <div class="value">3</div>
+          <div class="sub green">Registered Users</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Admin</div>
+          <div class="value">2</div>
+          <div class="sub green">Full access</div>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Search users...">
+        </div>
+        <select class="select-filter">
+          <option>ALL ROLES</option>
+          <option>Admin</option>
+          <option>User</option>
+        </select>
+        <select class="select-filter">
+          <option>ALL STATUS</option>
+          <option>Active</option>
+          <option>Inactive</option>
+        </select>
+      </div>
+
+      <div class="panel">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Joined</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="user-name">Admin</div>
+                <div class="user-role">System Admin</div>
+              </td>
+              <td>admin@gmail.com</td>
+              <td><span class="badge badge-orange">Admin</span></td>
+              <td><span class="badge badge-green">Active</span></td>
+              <td>Jan 1, 2026</td>
+              <td>
+                <button class="btn-update">Edit</button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="user-name">Admin 2</div>
+                <div class="user-role">System Admin</div>
+              </td>
+              <td>admin2@gmail.com</td>
+              <td><span class="badge badge-orange">Admin</span></td>
+              <td><span class="badge badge-green">Active</span></td>
+              <td>Jan 5, 2026</td>
+              <td>
+                <button class="btn-update">Edit</button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="user-name">Juan Dela Cruz</div>
+                <div class="user-role">Customer</div>
+              </td>
+              <td>juandc@gmail.com</td>
+              <td><span class="badge badge-green">User</span></td>
+              <td><span class="badge badge-green">Active</span></td>
+              <td>Feb 3, 2026</td>
+              <td>
+                <button class="btn-update">Edit</button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="user-name">Maria Reyes</div>
+                <div class="user-role">Customer</div>
+              </td>
+              <td>maria@gmail.com</td>
+              <td><span class="badge badge-green">User</span></td>
+              <td><span class="badge badge-green">Active</span></td>
+              <td>Feb 10, 2026</td>
+              <td>
+                <button class="btn-update">Edit</button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="user-name">Pedro Garcia</div>
+                <div class="user-role">Customer</div>
+              </td>
+              <td>pedro@gmail.com</td>
+              <td><span class="badge badge-green">User</span></td>
+              <td><span class="badge badge-red">Inactive</span></td>
+              <td>Mar 5, 2026</td>
+              <td>
+                <button class="btn-update">Edit</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
