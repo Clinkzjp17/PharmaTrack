@@ -1,7 +1,6 @@
--- Dimension: Medicine
 CREATE TABLE Dim_Medicine (
     MedicineKey INT PRIMARY KEY AUTO_INCREMENT,
-    MedicineID INT,                    -- from OLTP
+    MedicineID INT,
     Name VARCHAR(200),
     GenericName VARCHAR(200),
     Category VARCHAR(100),
@@ -12,18 +11,16 @@ CREATE TABLE Dim_Medicine (
     IsCurrent BOOLEAN DEFAULT TRUE
 );
 
--- Dimension: Customer
 CREATE TABLE Dim_Customer (
     CustomerKey INT PRIMARY KEY AUTO_INCREMENT,
     CustomerID INT,
     Name VARCHAR(150),
-    AgeGroup VARCHAR(20),              -- e.g., Child, Adult, Senior
+    AgeGroup VARCHAR(20),
     IsRegular BOOLEAN,
     StartDate DATE,
     EndDate DATE DEFAULT '9999-12-31'
 );
 
--- Dimension: Date
 CREATE TABLE Dim_Date (
     DateKey INT PRIMARY KEY,
     FullDate DATE NOT NULL,
@@ -36,7 +33,6 @@ CREATE TABLE Dim_Date (
     FiscalYear INT
 );
 
--- Dimension: Supplier
 CREATE TABLE Dim_Supplier (
     SupplierKey INT PRIMARY KEY AUTO_INCREMENT,
     SupplierID INT,
@@ -44,7 +40,6 @@ CREATE TABLE Dim_Supplier (
     City VARCHAR(100)
 );
 
--- Fact: Sales
 CREATE TABLE Fact_Sales (
     SalesKey INT PRIMARY KEY AUTO_INCREMENT,
     DateKey INT,
@@ -54,14 +49,13 @@ CREATE TABLE Fact_Sales (
     Quantity INT NOT NULL,
     UnitPrice DECIMAL(10,2),
     TotalAmount DECIMAL(12,2),
-    CostAmount DECIMAL(12,2),           -- for profit calculation
+    CostAmount DECIMAL(12,2),
     Profit DECIMAL(12,2) GENERATED ALWAYS AS (TotalAmount - CostAmount) STORED,
     FOREIGN KEY (DateKey) REFERENCES Dim_Date(DateKey),
     FOREIGN KEY (MedicineKey) REFERENCES Dim_Medicine(MedicineKey),
     FOREIGN KEY (CustomerKey) REFERENCES Dim_Customer(CustomerKey)
 );
 
--- Fact: Inventory Snapshot (for stock trend analysis)
 CREATE TABLE Fact_Inventory_Snapshot (
     SnapshotKey INT PRIMARY KEY AUTO_INCREMENT,
     DateKey INT,
@@ -72,7 +66,6 @@ CREATE TABLE Fact_Inventory_Snapshot (
     FOREIGN KEY (MedicineKey) REFERENCES Dim_Medicine(MedicineKey)
 );
 
--- Fact: Purchases
 CREATE TABLE Fact_Purchases (
     PurchaseKey INT PRIMARY KEY AUTO_INCREMENT,
     DateKey INT,
