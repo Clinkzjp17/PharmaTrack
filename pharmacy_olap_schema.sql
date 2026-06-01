@@ -1,3 +1,29 @@
+USE sales_dw;
+DELIMITER $$
+
+CREATE PROCEDURE PopulateDimDate(IN start_date DATE, IN end_date DATE)
+BEGIN
+    DECLARE current_dt DATE;
+    SET current_dt = start_date;
+    
+    WHILE current_dt <= end_date DO
+        INSERT INTO Dim_Date (DateKey, FullDate, Year, Month, MonthName, Quarter, DayOfWeek, IsWeekend, FiscalYear)
+        VALUES (
+            CAST(DATE_FORMAT(current_dt, '%Y%m%d') AS UNSIGNED),
+            current_dt,
+            YEAR(current_dt),
+            MONTH(current_dt),
+            MONTHNAME(current_dt),
+            QUARTER(current_dt),
+            DAYOFWEEK(current_dt),
+            IF(DAYOFWEEK(current_dt) IN (1, 7), 1, 0),
+            YEAR(current_dt)
+        );
+        SET current_dt = DATE_ADD(current_dt, INTERVAL 1 DAY);
+    END WHILE;
+END$$
+
+DELIMITER ;
 CREATE TABLE Dim_Medicine (
     MedicineKey INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     MedicineID INT UNSIGNED NOT NULL,
@@ -77,3 +103,20 @@ CREATE TABLE Fact_Purchases (
     FOREIGN KEY (MedicineKey) REFERENCES Dim_Medicine(MedicineKey),
     FOREIGN KEY (SupplierKey) REFERENCES Dim_Supplier(SupplierKey)
 );
+SHOW PROCEDURE STATUS WHERE Db = 'sales_dw';
+USE sales_dw;
+
+CREATE TABLE Dim_Date (
+    DateKey INT UNSIGNED NOT NULL PRIMARY KEY,
+    FullDate DATE NOT NULL,
+    Year INT NOT NULL,
+    Month INT NOT NULL,
+    MonthName VARCHAR(20) NOT NULL,
+    Quarter INT NOT NULL,
+    DayOfWeek INT NOT NULL,
+    IsWeekend TINYINT NOT NULL,
+    FiscalYear INT NOT NULL
+);
+USE sales_dw;
+CALL PopulateDimDate('2020-01-01', '2030-12-31');
+SELECT * FROM Dim_Date LIMIT 10;
