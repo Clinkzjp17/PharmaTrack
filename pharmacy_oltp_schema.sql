@@ -1,9 +1,8 @@
--- 1. Products / Medicines
 CREATE TABLE Medicines (
     MedicineID INT PRIMARY KEY AUTO_INCREMENT,
     Name VARCHAR(200) NOT NULL,
     GenericName VARCHAR(200),
-    Category VARCHAR(100),           -- e.g., Antibiotic, Analgesic
+    Category VARCHAR(100),
     Manufacturer VARCHAR(150),
     UnitPrice DECIMAL(10,2) NOT NULL,
     ReorderLevel INT NOT NULL,
@@ -12,7 +11,6 @@ CREATE TABLE Medicines (
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. Inventory
 CREATE TABLE Inventory (
     InventoryID INT PRIMARY KEY AUTO_INCREMENT,
     MedicineID INT NOT NULL,
@@ -23,7 +21,6 @@ CREATE TABLE Inventory (
     FOREIGN KEY (MedicineID) REFERENCES Medicines(MedicineID)
 );
 
--- 3. Suppliers
 CREATE TABLE Suppliers (
     SupplierID INT PRIMARY KEY AUTO_INCREMENT,
     Name VARCHAR(150) NOT NULL,
@@ -33,7 +30,6 @@ CREATE TABLE Suppliers (
     Address TEXT
 );
 
--- 4. Customers / Patients
 CREATE TABLE Customers (
     CustomerID INT PRIMARY KEY AUTO_INCREMENT,
     Name VARCHAR(150),
@@ -43,7 +39,6 @@ CREATE TABLE Customers (
     IsRegular BOOLEAN DEFAULT FALSE
 );
 
--- 5. Prescriptions
 CREATE TABLE Prescriptions (
     PrescriptionID INT PRIMARY KEY AUTO_INCREMENT,
     CustomerID INT,
@@ -53,7 +48,6 @@ CREATE TABLE Prescriptions (
     FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID)
 );
 
--- 6. Prescription Items
 CREATE TABLE PrescriptionItems (
     ItemID INT PRIMARY KEY AUTO_INCREMENT,
     PrescriptionID INT NOT NULL,
@@ -63,7 +57,6 @@ CREATE TABLE PrescriptionItems (
     FOREIGN KEY (MedicineID) REFERENCES Medicines(MedicineID)
 );
 
--- 7. Sales (Main Transaction Table)
 CREATE TABLE Sales (
     SaleID INT PRIMARY KEY AUTO_INCREMENT,
     SaleDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -76,7 +69,6 @@ CREATE TABLE Sales (
     FOREIGN KEY (PrescriptionID) REFERENCES Prescriptions(PrescriptionID)
 );
 
--- 8. Sale Items
 CREATE TABLE SaleItems (
     SaleItemID INT PRIMARY KEY AUTO_INCREMENT,
     SaleID INT NOT NULL,
@@ -89,7 +81,6 @@ CREATE TABLE SaleItems (
     FOREIGN KEY (MedicineID) REFERENCES Medicines(MedicineID)
 );
 
--- 9. Purchases (Stock In)
 CREATE TABLE Purchases (
     PurchaseID INT PRIMARY KEY AUTO_INCREMENT,
     SupplierID INT NOT NULL,
@@ -105,10 +96,10 @@ CREATE TABLE PurchaseItems (
     BatchNumber VARCHAR(50),
     Quantity INT NOT NULL,
     UnitCost DECIMAL(10,2),
-    FOREIGN KEY (PurchaseID) REFERENCES Purchases(PurchaseID)
+    FOREIGN KEY (PurchaseID) REFERENCES Purchases(PurchaseID),
+    FOREIGN KEY (MedicineID) REFERENCES Medicines(MedicineID)
 );
 
--- 10. Employees / Pharmacists
 CREATE TABLE Employees (
     EmployeeID INT PRIMARY KEY AUTO_INCREMENT,
     Name VARCHAR(150) NOT NULL,
