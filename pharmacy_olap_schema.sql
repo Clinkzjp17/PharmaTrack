@@ -1,10 +1,10 @@
 CREATE TABLE Dim_Medicine (
-    MedicineKey INT PRIMARY KEY AUTO_INCREMENT,
+    MedicineKey INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     MedicineID INT,
-    Name VARCHAR(200),
-    GenericName VARCHAR(200),
-    Category VARCHAR(100),
-    Manufacturer VARCHAR(150),
+    Name VARCHAR(25),
+    GenericName VARCHAR(25),
+    Category VARCHAR(25),
+    Manufacturer VARCHAR(25),
     IsPrescriptionRequired BOOLEAN,
     StartDate DATE,
     EndDate DATE DEFAULT '9999-12-31',
@@ -12,9 +12,9 @@ CREATE TABLE Dim_Medicine (
 );
 
 CREATE TABLE Dim_Customer (
-    CustomerKey INT PRIMARY KEY AUTO_INCREMENT,
+    CustomerKey INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     CustomerID INT,
-    Name VARCHAR(150),
+    Name VARCHAR(25),
     AgeGroup VARCHAR(20),
     IsRegular BOOLEAN,
     StartDate DATE,
@@ -22,7 +22,7 @@ CREATE TABLE Dim_Customer (
 );
 
 CREATE TABLE Dim_Date (
-    DateKey INT PRIMARY KEY,
+    DateKey INT UNSIGNED NOT NULL PRIMARY KEY,
     FullDate DATE NOT NULL,
     Year INT,
     Month INT,
@@ -34,17 +34,17 @@ CREATE TABLE Dim_Date (
 );
 
 CREATE TABLE Dim_Supplier (
-    SupplierKey INT PRIMARY KEY AUTO_INCREMENT,
+    SupplierKey INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     SupplierID INT,
-    Name VARCHAR(150),
-    City VARCHAR(100)
+    Name VARCHAR(25),
+    City VARCHAR(25)
 );
 
 CREATE TABLE Fact_Sales (
-    SalesKey INT PRIMARY KEY AUTO_INCREMENT,
-    DateKey INT,
-    MedicineKey INT,
-    CustomerKey INT,
+    SalesKey INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    DateKey INT UNSIGNED,
+    MedicineKey INT UNSIGNED,
+    CustomerKey INT UNSIGNED,
     EmployeeID INT,
     Quantity INT NOT NULL,
     UnitPrice DECIMAL(10,2),
@@ -57,7 +57,7 @@ CREATE TABLE Fact_Sales (
 );
 
 CREATE TABLE Fact_Inventory_Snapshot (
-    SnapshotKey INT PRIMARY KEY AUTO_INCREMENT,
+    SnapshotKey INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     DateKey INT,
     MedicineKey INT,
     StockQuantity INT,
@@ -67,7 +67,7 @@ CREATE TABLE Fact_Inventory_Snapshot (
 );
 
 CREATE TABLE Fact_Purchases (
-    PurchaseKey INT PRIMARY KEY AUTO_INCREMENT,
+    PurchaseKey INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     DateKey INT,
     MedicineKey INT,
     SupplierKey INT,

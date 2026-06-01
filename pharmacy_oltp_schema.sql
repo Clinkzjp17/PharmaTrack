@@ -1,9 +1,9 @@
 CREATE TABLE Medicines (
-    MedicineID INT PRIMARY KEY AUTO_INCREMENT,
-    Name VARCHAR(200) NOT NULL,
-    GenericName VARCHAR(200),
-    Category VARCHAR(100),
-    Manufacturer VARCHAR(150),
+    MedicineID INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(25) NOT NULL,
+    GenericName VARCHAR(25),
+    Category VARCHAR(25),
+    Manufacturer VARCHAR(25),
     UnitPrice DECIMAL(10,2) NOT NULL,
     ReorderLevel INT NOT NULL,
     ExpiryDate DATE,
@@ -12,8 +12,8 @@ CREATE TABLE Medicines (
 );
 
 CREATE TABLE Inventory (
-    InventoryID INT PRIMARY KEY AUTO_INCREMENT,
-    MedicineID INT NOT NULL,
+    InventoryID INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    MedicineID INT,
     BatchNumber VARCHAR(50),
     StockQuantity INT NOT NULL,
     ExpiryDate DATE NOT NULL,
@@ -22,8 +22,8 @@ CREATE TABLE Inventory (
 );
 
 CREATE TABLE Suppliers (
-    SupplierID INT PRIMARY KEY AUTO_INCREMENT,
-    Name VARCHAR(150) NOT NULL,
+    SupplierID INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(25) NOT NULL,
     ContactPerson VARCHAR(100),
     Phone VARCHAR(20),
     Email VARCHAR(100),
@@ -31,8 +31,8 @@ CREATE TABLE Suppliers (
 );
 
 CREATE TABLE Customers (
-    CustomerID INT PRIMARY KEY AUTO_INCREMENT,
-    Name VARCHAR(150),
+    CustomerID INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(25),
     Phone VARCHAR(20),
     Email VARCHAR(100),
     DateOfBirth DATE,
@@ -40,7 +40,7 @@ CREATE TABLE Customers (
 );
 
 CREATE TABLE Prescriptions (
-    PrescriptionID INT PRIMARY KEY AUTO_INCREMENT,
+    PrescriptionID INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     CustomerID INT,
     DoctorName VARCHAR(150),
     IssueDate DATE NOT NULL,
@@ -49,7 +49,7 @@ CREATE TABLE Prescriptions (
 );
 
 CREATE TABLE PrescriptionItems (
-    ItemID INT PRIMARY KEY AUTO_INCREMENT,
+    ItemID INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     PrescriptionID INT NOT NULL,
     MedicineID INT NOT NULL,
     Quantity INT NOT NULL,
@@ -58,7 +58,7 @@ CREATE TABLE PrescriptionItems (
 );
 
 CREATE TABLE Sales (
-    SaleID INT PRIMARY KEY AUTO_INCREMENT,
+    SaleID INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     SaleDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CustomerID INT,
     PrescriptionID INT NULL,
@@ -70,7 +70,7 @@ CREATE TABLE Sales (
 );
 
 CREATE TABLE SaleItems (
-    SaleItemID INT PRIMARY KEY AUTO_INCREMENT,
+    SaleItemID INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     SaleID INT NOT NULL,
     MedicineID INT NOT NULL,
     BatchNumber VARCHAR(50),
@@ -82,7 +82,7 @@ CREATE TABLE SaleItems (
 );
 
 CREATE TABLE Purchases (
-    PurchaseID INT PRIMARY KEY AUTO_INCREMENT,
+    PurchaseID INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     SupplierID INT NOT NULL,
     PurchaseDate DATETIME NOT NULL,
     TotalAmount DECIMAL(12,2),
@@ -90,7 +90,7 @@ CREATE TABLE Purchases (
 );
 
 CREATE TABLE PurchaseItems (
-    PurchaseItemID INT PRIMARY KEY AUTO_INCREMENT,
+    PurchaseItemID INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     PurchaseID INT NOT NULL,
     MedicineID INT NOT NULL,
     BatchNumber VARCHAR(50),
@@ -101,7 +101,7 @@ CREATE TABLE PurchaseItems (
 );
 
 CREATE TABLE Employees (
-    EmployeeID INT PRIMARY KEY AUTO_INCREMENT,
+    EmployeeID INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     Name VARCHAR(150) NOT NULL,
     Role ENUM('Pharmacist', 'Cashier', 'Admin', 'Manager'),
     Phone VARCHAR(20)
