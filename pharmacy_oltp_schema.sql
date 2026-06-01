@@ -13,11 +13,11 @@ CREATE TABLE Medicines (
 
 CREATE TABLE Inventory (
     InventoryID INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    MedicineID INT,
+    MedicineID INT UNSIGNED NOT NULL,
     BatchNumber VARCHAR(50),
     StockQuantity INT NOT NULL,
     ExpiryDate DATE NOT NULL,
-    PurchasePrice DECIMAL(10,2),
+    PurchasePrice DECIMAL(10,2) NOT NULL,
     FOREIGN KEY (MedicineID) REFERENCES Medicines(MedicineID)
 );
 
@@ -41,7 +41,7 @@ CREATE TABLE Customers (
 
 CREATE TABLE Prescriptions (
     PrescriptionID INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    CustomerID INT,
+    CustomerID INT UNSIGNED,
     DoctorName VARCHAR(150),
     IssueDate DATE NOT NULL,
     Notes TEXT,
@@ -50,8 +50,8 @@ CREATE TABLE Prescriptions (
 
 CREATE TABLE PrescriptionItems (
     ItemID INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    PrescriptionID INT NOT NULL,
-    MedicineID INT NOT NULL,
+    PrescriptionID INT UNSIGNED NOT NULL,
+    MedicineID INT UNSIGNED NOT NULL,
     Quantity INT NOT NULL,
     FOREIGN KEY (PrescriptionID) REFERENCES Prescriptions(PrescriptionID),
     FOREIGN KEY (MedicineID) REFERENCES Medicines(MedicineID)
@@ -60,19 +60,19 @@ CREATE TABLE PrescriptionItems (
 CREATE TABLE Sales (
     SaleID INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     SaleDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CustomerID INT,
-    PrescriptionID INT NULL,
+    CustomerID INT UNSIGNED,
+    PrescriptionID INT UNSIGNED NULL,
     TotalAmount DECIMAL(12,2) NOT NULL,
     PaymentMethod ENUM('Cash', 'Card', 'GCash', 'Maya', 'Credit') NOT NULL,
-    PharmacistID INT,
+    PharmacistID INT UNSIGNED,
     FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID),
     FOREIGN KEY (PrescriptionID) REFERENCES Prescriptions(PrescriptionID)
 );
 
 CREATE TABLE SaleItems (
     SaleItemID INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    SaleID INT NOT NULL,
-    MedicineID INT NOT NULL,
+    SaleID INT UNSIGNED NOT NULL,
+    MedicineID INT UNSIGNED NOT NULL,
     BatchNumber VARCHAR(50),
     Quantity INT NOT NULL,
     UnitPrice DECIMAL(10,2) NOT NULL,
@@ -83,7 +83,7 @@ CREATE TABLE SaleItems (
 
 CREATE TABLE Purchases (
     PurchaseID INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    SupplierID INT NOT NULL,
+    SupplierID INT UNSIGNED NOT NULL,
     PurchaseDate DATETIME NOT NULL,
     TotalAmount DECIMAL(12,2),
     FOREIGN KEY (SupplierID) REFERENCES Suppliers(SupplierID)
@@ -91,8 +91,8 @@ CREATE TABLE Purchases (
 
 CREATE TABLE PurchaseItems (
     PurchaseItemID INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    PurchaseID INT NOT NULL,
-    MedicineID INT NOT NULL,
+    PurchaseID INT UNSIGNED NOT NULL,
+    MedicineID INT UNSIGNED NOT NULL,
     BatchNumber VARCHAR(50),
     Quantity INT NOT NULL,
     UnitCost DECIMAL(10,2),
@@ -103,6 +103,6 @@ CREATE TABLE PurchaseItems (
 CREATE TABLE Employees (
     EmployeeID INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     Name VARCHAR(150) NOT NULL,
-    Role ENUM('Pharmacist', 'Cashier', 'Admin', 'Manager'),
+    Role ENUM('Pharmacist', 'Cashier', 'Admin', 'Manager') NOT NULL,
     Phone VARCHAR(20)
 );
