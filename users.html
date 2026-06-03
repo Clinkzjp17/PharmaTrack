@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmaTrack – Users</title>
+  <link rel="stylesheet" href="users.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon"></div>
+      <div class="logo-text">
+        <h3>PharmaTrack</h3>
+        <span>Admin</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">MAIN</div>
+      <a href="dashboard.html"><i class="fa-solid fa-chart-bar"></i><span>Dashboard</span></a>
+      <a href="products.html"><i class="fa-solid fa-capsules"></i><span>Products</span></a>
+      <a href="stocks.html"><i class="fa-solid fa-cart-shopping"></i><span>Stocks</span></a>
+      <a href="users.html" class="active"><i class="fa-solid fa-user"></i><span>Users</span></a>
+      <div class="sidebar-section-label">MONITORING</div>
+      <a href="expiry.html"><i class="fa-regular fa-clock"></i><span>Expiry</span></a>
+      <a href="lowstock.html"><i class="fa-solid fa-triangle-exclamation"></i><span>Low Stock</span></a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="avatar">AD</div>
+      <div class="admin-info">
+        <div class="name">Admin</div>
+        <div class="role">Administrator</div>
+      </div>
+      <a href="admin-login.html" class="logout-btn" title="Logout">
+        <i class="fa-solid fa-right-from-bracket"></i>
+      </a>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="page-header">
+      <div class="page-header-row">
+        <h1>Users</h1>
+        <button class="btn-add-user" onclick="openAddModal()">
+          <i class="fa-solid fa-plus"></i> Add User
+        </button>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="label">Total Users</div>
+          <div class="value">5</div>
+          <div class="sub green">All accounts</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Users</div>
+          <div class="value">3</div>
+          <div class="sub green">Registered Users</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Admin</div>
+          <div class="value">2</div>
+          <div class="sub green">Full access</div>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Search users...">
+        </div>
+        <select class="select-filter">
+          <option>ALL ROLES</option>
+          <option>Admin</option>
+          <option>User</option>
+        </select>
+        <select class="select-filter">
+          <option>ALL STATUS</option>
+          <option>Active</option>
+          <option>Inactive</option>
+        </select>
+      </div>
+
+      <div class="panel">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Joined</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="user-name">Admin</div>
+                <div class="user-role">System Admin</div>
+              </td>
+              <td>admin@gmail.com</td>
+              <td><span class="badge badge-orange">Admin</span></td>
+              <td><span class="badge badge-green">Active</span></td>
+              <td>Jan 1, 2026</td>
+              <td>
+                <button class="btn-update" onclick="openEditModal('Admin', '', 'admin@gmail.com', 'Admin', 'Active')">Edit</button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="user-name">Admin 2</div>
+                <div class="user-role">System Admin</div>
+              </td>
+              <td>admin2@gmail.com</td>
+              <td><span class="badge badge-orange">Admin</span></td>
+              <td><span class="badge badge-green">Active</span></td>
+              <td>Jan 5, 2026</td>
+              <td>
+                <button class="btn-update" onclick="openEditModal('Admin 2', '', 'admin2@gmail.com', 'Admin', 'Active')">Edit</button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="user-name">Juan Dela Cruz</div>
+                <div class="user-role">Customer</div>
+              </td>
+              <td>juandc@gmail.com</td>
+              <td><span class="badge badge-green">User</span></td>
+              <td><span class="badge badge-green">Active</span></td>
+              <td>Feb 3, 2026</td>
+              <td>
+                <button class="btn-update" onclick="openEditModal('Juan', 'Dela Cruz', 'juandc@gmail.com', 'User', 'Active')">Edit</button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="user-name">Maria Reyes</div>
+                <div class="user-role">Customer</div>
+              </td>
+              <td>maria@gmail.com</td>
+              <td><span class="badge badge-green">User</span></td>
+              <td><span class="badge badge-green">Active</span></td>
+              <td>Feb 10, 2026</td>
+              <td>
+                <button class="btn-update" onclick="openEditModal('Maria', 'Reyes', 'maria@gmail.com', 'User', 'Active')">Edit</button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="user-name">Pedro Garcia</div>
+                <div class="user-role">Customer</div>
+              </td>
+              <td>pedro@gmail.com</td>
+              <td><span class="badge badge-green">User</span></td>
+              <td><span class="badge badge-red">Inactive</span></td>
+              <td>Mar 5, 2026</td>
+              <td>
+                <button class="btn-update" onclick="openEditModal('Pedro', 'Garcia', 'pedro@gmail.com', 'User', 'Inactive')">Edit</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== ADD USER MODAL ===== -->
+  <div class="modal-overlay" id="addUserModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <h2>Add New User</h2>
+          <p class="modal-subtitle">Fill in the details to create a new account</p>
+        </div>
+        <button class="modal-close" onclick="closeAddModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-name-row">
+          <div class="modal-field">
+            <label>First Name</label>
+            <input type="text" id="add-firstname" placeholder="Juan">
+          </div>
+          <div class="modal-field">
+            <label>Last Name</label>
+            <input type="text" id="add-lastname" placeholder="Dela Cruz">
+          </div>
+        </div>
+        <div class="modal-field">
+          <label>Email</label>
+          <input type="email" id="add-email" placeholder="juan@email.com">
+        </div>
+        <div class="modal-name-row">
+          <div class="modal-field">
+            <label>Role</label>
+            <select id="add-role">
+              <option value="User">User</option>
+              <option value="Admin">Admin</option>
+            </select>
+          </div>
+          <div class="modal-field">
+            <label>Status</label>
+            <select id="add-status">
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-modal-cancel" onclick="closeAddModal()">Cancel</button>
+        <button class="btn-modal-save" onclick="saveNewUser()">
+          <i class="fa-solid fa-user-plus"></i> Save User
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== EDIT USER MODAL ===== -->
+  <div class="modal-overlay" id="editUserModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <h2>Edit User</h2>
+          <p class="modal-subtitle">Update the details of this account</p>
+        </div>
+        <button class="modal-close" onclick="closeEditModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-name-row">
+          <div class="modal-field">
+            <label>First Name</label>
+            <input type="text" id="edit-firstname" placeholder="Juan">
+          </div>
+          <div class="modal-field">
+            <label>Last Name</label>
+            <input type="text" id="edit-lastname" placeholder="Dela Cruz">
+          </div>
+        </div>
+        <div class="modal-field">
+          <label>Email</label>
+          <input type="email" id="edit-email" placeholder="juan@email.com">
+        </div>
+        <div class="modal-name-row">
+          <div class="modal-field">
+            <label>Role</label>
+            <select id="edit-role">
+              <option value="User">User</option>
+              <option value="Admin">Admin</option>
+            </select>
+          </div>
+          <div class="modal-field">
+            <label>Status</label>
+            <select id="edit-status">
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-field">
+          <label>New Password <span style="color:rgba(255,255,255,0.4);font-weight:400;">(leave blank to keep current)</span></label>
+          <input type="password" id="edit-password" placeholder="••••••••">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-modal-cancel" onclick="closeEditModal()">Cancel</button>
+        <button class="btn-modal-save" onclick="saveEditUser()">
+          <i class="fa-solid fa-floppy-disk"></i> Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== ADD USER MODAL =====
+    function openAddModal() {
+      document.getElementById('add-firstname').value = '';
+      document.getElementById('add-lastname').value  = '';
+      document.getElementById('add-email').value     = '';
+      document.getElementById('add-role').value      = 'User';
+      document.getElementById('add-status').value    = 'Active';
+      document.getElementById('addUserModal').classList.add('open');
+    }
+
+    function closeAddModal() {
+      document.getElementById('addUserModal').classList.remove('open');
+    }
+
+    function saveNewUser() {
+      const first  = document.getElementById('add-firstname').value.trim();
+      const last   = document.getElementById('add-lastname').value.trim();
+      const email  = document.getElementById('add-email').value.trim();
+
+      if (!first || !email) {
+        alert('Please fill in at least the first name and email.');
+        return;
+      }
+
+      alert('User "' + first + ' ' + last + '" added successfully!');
+      closeAddModal();
+    }
+
+    // ===== EDIT USER MODAL =====
+    function openEditModal(firstname, lastname, email, role, status) {
+      document.getElementById('edit-firstname').value = firstname;
+      document.getElementById('edit-lastname').value  = lastname;
+      document.getElementById('edit-email').value     = email;
+      document.getElementById('edit-role').value      = role;
+      document.getElementById('edit-status').value    = status;
+      document.getElementById('edit-password').value  = '';
+      document.getElementById('editUserModal').classList.add('open');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editUserModal').classList.remove('open');
+    }
+
+    function saveEditUser() {
+      const first = document.getElementById('edit-firstname').value.trim();
+      const last  = document.getElementById('edit-lastname').value.trim();
+
+      if (!first) {
+        alert('First name cannot be empty.');
+        return;
+      }
+
+      alert('User "' + first + ' ' + last + '" updated successfully!');
+      closeEditModal();
+    }
+
+    // Close modals when clicking outside
+    document.getElementById('addUserModal').addEventListener('click', function(e) {
+      if (e.target === this) closeAddModal();
+    });
+
+    document.getElementById('editUserModal').addEventListener('click', function(e) {
+      if (e.target === this) closeEditModal();
+    });
+  </script>
+</body>
+</html>
