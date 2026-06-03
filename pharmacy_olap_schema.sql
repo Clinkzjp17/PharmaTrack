@@ -7,7 +7,8 @@ BEGIN
     SET current_dt = start_date;
     
     WHILE current_dt <= end_date DO
-        INSERT INTO Dim_Date (DateKey, FullDate, Year, Month, MonthName, Quarter, DayOfWeek, IsWeekend, FiscalYear)
+        INSERT IGNORE INTO Dim_Date (DateKey, FullDate, Year, Month, MonthName, Quarter, DayOfWeek, IsWeekend, FiscalYear)
+
         VALUES (
             CAST(DATE_FORMAT(current_dt, '%Y%m%d') AS UNSIGNED),
             current_dt,
@@ -24,7 +25,9 @@ BEGIN
 END$$
 
 DELIMITER ;
+
 CREATE TABLE Dim_Medicine (
+
     MedicineKey INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     MedicineID INT UNSIGNED NOT NULL,
     Name VARCHAR(25),
@@ -106,17 +109,6 @@ CREATE TABLE Fact_Purchases (
 SHOW PROCEDURE STATUS WHERE Db = 'sales_dw';
 USE sales_dw;
 
-CREATE TABLE Dim_Date (
-    DateKey INT UNSIGNED NOT NULL PRIMARY KEY,
-    FullDate DATE NOT NULL,
-    Year INT NOT NULL,
-    Month INT NOT NULL,
-    MonthName VARCHAR(20) NOT NULL,
-    Quarter INT NOT NULL,
-    DayOfWeek INT NOT NULL,
-    IsWeekend TINYINT NOT NULL,
-    FiscalYear INT NOT NULL
-);
 USE sales_dw;
 CALL PopulateDimDate('2020-01-01', '2030-12-31');
 SELECT * FROM Dim_Date LIMIT 10;
