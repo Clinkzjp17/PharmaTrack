@@ -9,7 +9,6 @@ SELECT 0, 'Walk-in', 'Unknown', FALSE, '2000-01-01', '9999-12-31'
 FROM (SELECT 1 AS dummy) x
 WHERE NOT EXISTS ( SELECT 1 FROM sales_dw.Dim_Customer WHERE CustomerID = 0);
 
-
 INSERT INTO sales_dw.Dim_Customer ( CustomerID, Name, AgeGroup, IsRegular, StartDate, EndDate)
 SELECT c.CustomerID, c.Name, CASE WHEN c.DateOfBirth IS NULL THEN 'Unknown' WHEN TIMESTAMPDIFF(YEAR, c.DateOfBirth, CURDATE()) < 18 THEN 'Youth'
 WHEN TIMESTAMPDIFF(YEAR, c.DateOfBirth, CURDATE()) BETWEEN 18 AND 60 THEN 'Adult' ELSE 'Senior' END AS AgeGroup, c.IsRegular, CURDATE() AS StartDate,
