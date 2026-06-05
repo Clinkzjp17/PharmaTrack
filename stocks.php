@@ -14,6 +14,7 @@
 </head>
 <body>
 
+<<<<<<< Updated upstream:stocks.html
 <div class="sidebar">
   <div class="sidebar-logo">
     <div class="logo-icon"></div>
@@ -64,6 +65,9 @@
     </a>
   </div>
 </div>
+=======
+<?php include 'includes/sidebar.php'; ?>
+>>>>>>> Stashed changes:stocks.php
 
 <div class="main-content">
 
