@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmaTrack – Products</title>
+  <link rel="stylesheet" href="product.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"></div>
+    <div class="logo-text">
+      <h3>PharmaTrack</h3>
+      <span>Admin</span>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-section-label">MAIN</div>
+    <a href="dashboard.html"><i class="fa-solid fa-chart-bar"></i><span>Dashboard</span></a>
+    <a href="products.html" class="active"><i class="fa-solid fa-capsules"></i><span>Products</span></a>
+    <a href="stocks.html"><i class="fa-solid fa-cart-shopping"></i><span>Stocks</span></a>
+    <a href="#"><i class="fa-solid fa-user"></i><span>Users</span></a>
+    <div class="sidebar-section-label">MONITORING</div>
+    <a href="expiry.html"><i class="fa-regular fa-clock"></i><span>Expiry</span></a>
+    <a href="lowstock.html"><i class="fa-solid fa-triangle-exclamation"></i><span>Low Stock</span></a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="avatar">AD</div>
+    <div class="admin-info">
+      <div class="name">Admin</div>
+      <div class="role">Administrator</div>
+    </div>
+    <a href="admin-login.html" class="logout-btn" title="Logout">
+      <i class="fa-solid fa-right-from-bracket"></i>
+    </a>
+  </div>
+</div>
+
+<div class="main-content">
+  <div class="page-header">
+    <div class="page-header-row">
+      <h1>Products</h1>
+      <button class="btn-add-product" onclick="openBatchModal()">
+        <i class="fa-solid fa-pen-to-square"></i> Batch Update
+      </button>
+    </div>
+  </div>
+
+  <div class="page-body">
+    <div class="filter-row">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Search medicine...">
+      </div>
+      <select class="select-filter">
+        <option>ALL CATEGORIES</option>
+        <option>Analgesic</option>
+        <option>Antihistamine</option>
+        <option>Antibiotic</option>
+      </select>
+      <select class="select-filter">
+        <option>ALL STATUS</option>
+        <option>In Stock</option>
+        <option>Low Stock</option>
+        <option>Out of Stock</option>
+      </select>
+    </div>
+
+    <div class="status-tabs">
+      <button class="status-tab all">All (234)</button>
+      <button class="status-tab in-stock">In Stock (321)</button>
+      <button class="status-tab low-stock">Low Stock (21)</button>
+      <button class="status-tab out-of-stock">Out of Stock (81)</button>
+    </div>
+
+    <div class="panel">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Category</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="products-tbody">
+          <!-- Rows rendered by JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="batchModal">
+  <div class="modal-box">
+
+    <div class="modal-header">
+      <div>
+        <h2>Batch Update Products</h2>
+        <p class="modal-subtitle">Search and add multiple products, then save all changes at once</p>
+      </div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+
+    <div class="modal-search-wrap">
+      <div class="modal-search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="product-search" placeholder="Search product name or category..." oninput="filterProducts()" autocomplete="off">
+      </div>
+      <div class="medicine-dropdown" id="product-dropdown"></div>
+    </div>
+
+    <div class="modal-list-header">
+      <span>Product</span>
+      <span>Category</span>
+      <span>Quantity</span>
+      <span>Price</span>
+      <span>Status</span>
+      <span></span>
+    </div>
+
+    <div class="modal-list" id="modal-list">
+      <div class="modal-list-empty" id="list-empty">
+        <i class="fa-solid fa-capsules"></i>
+        <p>Search and click a product above to add it to the update list</p>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <div class="modal-footer-left">
+        <span id="item-count">0 products selected</span>
+      </div>
+      <div class="modal-footer-right">
+        <button class="btn-modal-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-save-all" id="save-btn" onclick="saveAll()" disabled>
+          <i class="fa-solid fa-floppy-disk"></i> Save All Changes
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <i class="fa-solid fa-check-circle"></i>
+  <span id="toast-msg">Products updated successfully!</span>
+</div>
+
+<script>
+
+const allProducts = [
+  { id:1, name:'Biogesic 500mg',      category:'Analgesic',        qty:100, price:6.50,  status:'In Stock'    },
+  { id:2, name:'Neozep',              category:'Cold & Flu',       qty:60,  price:12.00, status:'In Stock'    },
+  { id:3, name:'Amoxicillin 500mg',   category:'Antibiotic',       qty:8,   price:18.50, status:'Low Stock'   },
+  { id:4, name:'Cetirizine 10mg',     category:'Antihistamine',    qty:0,   price:9.75,  status:'Out of Stock'},
+  { id:5, name:'Losartan 50mg',       category:'Antihypertensive', qty:45,  price:15.00, status:'In Stock'    },
+  { id:6, name:'Metformin 500mg',     category:'Antidiabetic',     qty:32,  price:8.25,  status:'In Stock'    },
+  { id:7, name:'Ascorbic Acid 500mg', category:'Supplement',       qty:5,   price:5.50,  status:'Low Stock'   },
+  { id:8, name:'Ibuprofen 200mg',     category:'Analgesic',        qty:75,  price:7.00,  status:'In Stock'    },
+  { id:9, name:'Mefenamic Acid',      category:'Analgesic',        qty:90,  price:11.00, status:'In Stock'    },
+];
+
+let editItems = []; 
+
+function statusBadge(s) {
+  const map = {
+    'In Stock':     'badge-green',
+    'Low Stock':    'badge-yellow',
+    'Out of Stock': 'badge-red',
+  };
+  return `<span class="badge ${map[s] || 'badge-green'}">${s}</span>`;
+}
+
+function renderTable() {
+  const tbody = document.getElementById('products-tbody');
+  tbody.innerHTML = allProducts.map(p => `
+    <tr>
+      <td>
+        <div class="product-name">${p.name}</div>
+        <div class="product-cat">${p.category}</div>
+      </td>
+      <td>${p.category}</td>
+      <td>${p.qty} pcs</td>
+      <td>₱ ${p.price.toFixed(2)}</td>
+      <td>${statusBadge(p.status)}</td>
+      <td>
+        <button class="btn-update" onclick="openSingleModal(${p.id})">Update</button>
+      </td>
+    </tr>
+  `).join('');
+}
+renderTable();
+
+function openSingleModal(id) {
+  editItems = [];
+  const p = allProducts.find(x => x.id === id);
+  if (p) addProduct(p.name, p.category, p.qty, p.price, p.status);
+  openBatchModal();
+}
+
+function openBatchModal() {
+  document.getElementById('batchModal').classList.add('open');
+  if (!editItems.length) {
+    document.getElementById('product-search').value = '';
+  }
+}
+function closeModal() {
+  document.getElementById('batchModal').classList.remove('open');
+  editItems = [];
+  document.getElementById('product-search').value = '';
+  hideDropdown();
+  renderList();
+}
+document.getElementById('batchModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+function filterProducts() {
+  const q    = document.getElementById('product-search').value.trim().toLowerCase();
+  const drop = document.getElementById('product-dropdown');
+  drop.innerHTML = '';
+  if (!q) { hideDropdown(); return; }
+
+  const res = allProducts.filter(p =>
+    p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)
+  );
+  if (!res.length) { hideDropdown(); return; }
+
+  res.forEach(p => {
+    const added = editItems.some(i => i.id === p.id);
+    const opt   = document.createElement('div');
+    opt.className = 'medicine-option' + (added ? ' already-added' : '');
+    opt.innerHTML = `
+      <span class="med-opt-name">${p.name}</span>
+      <span class="med-opt-cat">${p.category}</span>
+      <span class="med-opt-stock">${added ? '✓ Added' : p.qty + ' pcs'}</span>
+    `;
+    if (!added) opt.onclick = () => addProduct(p.name, p.category, p.qty, p.price, p.status);
+    drop.appendChild(opt);
+  });
+  drop.classList.add('show');
+}
+
+function hideDropdown() {
+  const d = document.getElementById('product-dropdown');
+  d.classList.remove('show');
+  d.innerHTML = '';
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.modal-search-wrap')) hideDropdown();
+});
+
+function addProduct(name, category, qty, price, status) {
+  const exists = editItems.find(i => i.name === name);
+  if (exists) return;
+  const src = allProducts.find(p => p.name === name);
+  editItems.push({ id: src.id, name, category, qty, price: price.toFixed(2), status });
+  renderList();
+  document.getElementById('product-search').value = '';
+  hideDropdown();
+}
+
+function statusColor(s) {
+  if (s === 'In Stock')     return '#2eb872';
+  if (s === 'Low Stock')    return '#e89b3a';
+  if (s === 'Out of Stock') return '#d94f4f';
+  return '#2eb872';
+}
+
+function renderList() {
+  const list    = document.getElementById('modal-list');
+  const empty   = document.getElementById('list-empty');
+  const count   = document.getElementById('item-count');
+  const saveBtn = document.getElementById('save-btn');
+
+  list.querySelectorAll('.modal-item').forEach(el => el.remove());
+
+  if (!editItems.length) {
+    empty.style.display = 'flex';
+    count.textContent   = '0 products selected';
+    saveBtn.disabled    = true;
+    return;
+  }
+
+  empty.style.display = 'none';
+  count.textContent   = editItems.length + (editItems.length === 1 ? ' product selected' : ' products selected');
+  saveBtn.disabled    = false;
+
+  editItems.forEach((item, idx) => {
+    const row = document.createElement('div');
+    row.className = 'modal-item';
+    row.innerHTML = `
+      <div>
+        <div class="modal-item-name">${item.name}</div>
+        <div class="modal-item-cat">${item.category}</div>
+      </div>
+      <div>
+        <select class="modal-item-input" onchange="updateField(${idx},'category',this.value)" style="font-size:12px;padding:6px 8px;">
+          ${['Analgesic','Antibiotic','Antihistamine','Cold & Flu','Antihypertensive','Antidiabetic','Supplement']
+            .map(c => `<option ${c===item.category?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <input type="number" class="modal-item-input" min="0" value="${item.qty}"
+          oninput="updateField(${idx},'qty',this.value)" placeholder="0">
+      </div>
+      <div class="modal-item-price-wrap">
+        <span>₱</span>
+        <input type="number" class="modal-item-input" min="0" step="0.01" value="${item.price}"
+          oninput="updateField(${idx},'price',this.value)" placeholder="0.00">
+      </div>
+      <div>
+        <select class="modal-item-input" onchange="updateField(${idx},'status',this.value)"
+          style="font-size:11px;padding:6px 6px;color:${statusColor(item.status)};font-weight:600;">
+          ${['In Stock','Low Stock','Out of Stock']
+            .map(s => `<option style="color:${statusColor(s)}" ${s===item.status?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <button class="btn-remove-item" onclick="removeItem(${idx})" title="Remove">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function updateField(idx, field, val) {
+  if (field === 'qty')   editItems[idx].qty   = parseInt(val) || 0;
+  else if (field === 'price') editItems[idx].price = val;
+  else editItems[idx][field] = val;
+}
+
+function removeItem(idx) {
+  editItems.splice(idx, 1);
+  renderList();
+}
+
+function saveAll() {
+  editItems.forEach(item => {
+    const p = allProducts.find(x => x.id === item.id);
+    if (p) {
+      p.qty      = parseInt(item.qty) || 0;
+      p.price    = parseFloat(item.price) || 0;
+      p.category = item.category;
+      p.status   = item.status;
+    }
+  });
+  const n = editItems.length;
+  closeModal();
+  renderTable();
+  showToast(`${n} product${n===1?'':'s'} updated successfully!`);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+
+</body>
+</html>
