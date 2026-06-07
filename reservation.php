@@ -34,11 +34,11 @@
 
         <div class="nav-links">
 
-            <a href="medicine.html" class="nav-btn">
+            <a href="medicine.php" class="nav-btn">
                 Medicine
             </a>
 
-            <a href="reservation.html" class="nav-btn active">
+            <a href="reservation.php" class="nav-btn active">
                 My Reservations
             </a>
 

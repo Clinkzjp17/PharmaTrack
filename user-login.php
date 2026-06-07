@@ -27,7 +27,7 @@
         </div>
 
         <div class="menu">
-            <a href="admin-login.html">
+            <a href="admin-login.php">
                 <i class="fa-solid fa-shield-halved"></i>
                 <div>
                     <div class="title">Admin</div>
@@ -35,7 +35,7 @@
                 </div>
             </a>
 
-            <a href="user-login.html" class="active">
+            <a href="user-login.php" class="active">
                 <i class="fa-solid fa-user"></i>
                 <div>
                     <div class="title">User</div>
@@ -61,14 +61,14 @@
             <label for="password">Password</label>
             <input type="password" id="password" placeholder="Enter your password" required>
 
-            <button type="submit">Sign in as Admin</button>
+            <button type="submit">Sign in as User</button>
 
         </form>
 </div>
  <p class="error" id="error"></p>
 
         <p style="margin-top:15px; font-size:13px;">
-            No account yet? <a style="color: rgb(21, 74, 98);" href="#">Register here</a>
+            No account yet? <a style="color: rgb(21, 74, 98);" href="sign-up.php">Register here</a>
         </p>
 
         </div>

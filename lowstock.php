@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmaTrack – Low Stock</title>
+  <link rel="stylesheet" href="lowstock.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+<?php include 'includes/sidebar.php'; ?>
+
+<div class="main-content">
+  <div class="page-header">
+    <div class="page-header-row">
+      <h1>Low Stock</h1>
+      <button class="btn-batch-restock" onclick="openBatchModal()">
+        <i class="fa-solid fa-pen-to-square"></i> Batch Restock
+      </button>
+    </div>
+  </div>
+
+  <div class="page-body">
+
+    <div class="stat-cards">
+      <div class="stat-card card-red">
+        <div class="card-label">Critical (less than 10 pcs)</div>
+        <div class="card-value" id="count-critical">0</div>
+        <div class="card-sub">Restock immediately</div>
+      </div>
+      <div class="stat-card card-orange">
+        <div class="card-label">Low (10–40 pcs)</div>
+        <div class="card-value" id="count-low">0</div>
+        <div class="card-sub">Need to restock soon</div>
+      </div>
+      <div class="stat-card card-green">
+        <div class="card-label">Warning (50–100 pcs)</div>
+        <div class="card-value" id="count-warning">0</div>
+        <div class="card-sub">Enough stocks</div>
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="search-input" placeholder="Search medicines..." oninput="applyFilters()">
+      </div>
+      <select class="select-filter" id="level-filter" onchange="applyFilters()">
+        <option value="ALL">ALL</option>
+        <option value="critical">Critical</option>
+        <option value="low">Low</option>
+        <option value="warning">Warning</option>
+      </select>
+    </div>
+
+    <div class="panel">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Category</th>
+            <th>Quantity</th>
+            <th>Stock Level</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="stock-tbody"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Restock Modal ───────────────────────────────────────────────── -->
+<div class="modal-overlay" id="restockModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <h2>Restock Product</h2>
+        <p class="modal-subtitle">Log incoming stock and update inventory</p>
+      </div>
+      <button class="modal-close" onclick="closeModal('restockModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-product-info">
+        <div class="modal-product-icon"><i class="fa-solid fa-capsules"></i></div>
+        <div>
+          <div class="modal-product-name" id="rs-prod-name">–</div>
+          <div class="modal-product-meta" id="rs-prod-meta">–</div>
+        </div>
+      </div>
+      <div class="modal-stock-status">
+        <span class="status-label">Current stock</span>
+        <div class="modal-stock-bar">
+          <div class="modal-stock-fill" id="rs-bar-fill" style="width:0%"></div>
+        </div>
+        <span class="modal-stock-count" id="rs-bar-count">0 pcs</span>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Qty to Add</label>
+          <input type="number" class="form-input" id="rs-qty" min="1" placeholder="0" oninput="updateSummary()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date Received</label>
+          <input type="date" class="form-input" id="rs-date">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Supplier</label>
+          <select class="form-select" id="rs-supplier">
+            <option value="" disabled selected>Select supplier</option>
+            <option>PhilPharma Supply Co.</option>
+            <option>MedEx Distributors</option>
+            <option>Metro Drug Inc.</option>
+            <option>RiteMed</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Expiry Date</label>
+          <input type="date" class="form-input" id="rs-expiry">
+        </div>
+      </div>
+      <div class="restock-summary">
+        <div class="summary-row"><span>Current stock</span><span id="s-current">– pcs</span></div>
+        <div class="summary-row"><span>Adding</span><span id="s-adding" style="color:var(--accent-green);">+ 0 pcs</span></div>
+        <div class="summary-row total"><span>New Total</span><span id="s-total">– pcs</span></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="rs-notes" placeholder="e.g. Batch no. LOT-2025-088, delivery from warehouse..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeModal('restockModal')">Cancel</button>
+      <button class="btn-confirm-restock" onclick="confirmRestock()">
+        <i class="fa-solid fa-plus"></i> Confirm Restock
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Remove Product Modal ────────────────────────────────────────── -->
+<div class="modal-overlay" id="removeModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <h2>Remove Product</h2>
+        <p class="modal-subtitle">Permanently remove this item from inventory</p>
+      </div>
+      <button class="modal-close" onclick="closeModal('removeModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-product-info">
+        <div class="modal-product-icon"><i class="fa-solid fa-capsules"></i></div>
+        <div>
+          <div class="modal-product-name" id="rm-prod-name">–</div>
+          <div class="modal-product-meta" id="rm-prod-meta">–</div>
+        </div>
+      </div>
+      <div style="background:rgba(217,79,79,0.12);border:1px solid rgba(217,79,79,0.3);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;">
+        <i class="fa-solid fa-circle-exclamation" style="color:var(--accent-red);font-size:16px;flex-shrink:0;"></i>
+        <p style="font-size:12px;color:rgba(255,255,255,0.75);margin:0;line-height:1.5;">Removing this product will delete it from inventory. This action cannot be undone. Make sure all stock has been accounted for before proceeding.</p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reason for Removal</label>
+        <select class="form-select" id="rm-reason">
+          <option value="" disabled selected>Select a reason</option>
+          <option>Discontinued product</option>
+          <option>Replaced by newer variant</option>
+          <option>Supplier no longer available</option>
+          <option>Consistently out of demand</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="rm-notes" placeholder="Optional additional details..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeModal('removeModal')">Cancel</button>
+      <button class="btn-confirm-remove" onclick="confirmRemove()">
+        <i class="fa-solid fa-trash-can"></i> Remove Product
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Batch Restock Modal ─────────────────────────────────────────── -->
+<div class="modal-overlay" id="batchModal">
+  <div class="modal-box modal-box-wide">
+    <div class="modal-header">
+      <div>
+        <h2>Batch Restock</h2>
+        <p class="modal-subtitle">Search and add multiple medicines, then save all at once</p>
+      </div>
+      <button class="modal-close" onclick="closeModal('batchModal')">×</button>
+    </div>
+
+    <!-- Search -->
+    <div class="modal-search-wrap">
+      <div class="modal-search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="batch-search" placeholder="Search medicine name..." oninput="filterBatchMedicines()" autocomplete="off">
+      </div>
+      <div class="medicine-dropdown" id="batch-dropdown"></div>
+    </div>
+
+    <!-- List header -->
+    <div class="modal-list-header">
+      <span>Medicine</span>
+      <span>Current Stock</span>
+      <span>Qty to Add</span>
+      <span>New Total</span>
+      <span></span>
+    </div>
+
+    <!-- List body -->
+    <div class="modal-list" id="batch-list">
+      <div class="modal-list-empty" id="batch-list-empty">
+        <i class="fa-solid fa-capsules"></i>
+        <p>Search and click a medicine above to add it to the batch</p>
+      </div>
+    </div>
+
+    <div class="modal-footer batch-modal-footer">
+      <div class="modal-footer-left">
+        <span id="batch-item-count">0 items added</span>
+      </div>
+      <div class="modal-footer-right">
+        <button class="btn-modal-cancel" onclick="closeModal('batchModal')">Cancel</button>
+        <button class="btn-save-all" id="btn-batch-save" onclick="saveBatch()" disabled>
+          <i class="fa-solid fa-floppy-disk"></i> Save All
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <i class="fa-solid fa-check-circle"></i>
+  <span id="toast-msg">Done!</span>
+</div>
+
+<script>
+let stockData = [
+  { id:1, name:'Amoxicillin 500mg',   category:'Antibiotic',       qty:5,  maxQty:200, level:'critical' },
+  { id:2, name:'Cetirizine 10mg',     category:'Antihistamine',    qty:0,  maxQty:150, level:'critical' },
+  { id:3, name:'Ascorbic Acid 500mg', category:'Supplement',       qty:8,  maxQty:200, level:'critical' },
+  { id:4, name:'Biogesic 500mg',      category:'Analgesic',        qty:22, maxQty:200, level:'low'      },
+  { id:5, name:'Neozep Forte',        category:'Cold & Flu',       qty:35, maxQty:200, level:'low'      },
+  { id:6, name:'Losartan 50mg',       category:'Antihypertensive', qty:60, maxQty:200, level:'warning'  },
+  { id:7, name:'Metformin 500mg',     category:'Antidiabetic',     qty:75, maxQty:200, level:'warning'  },
+];
+
+let currentItem  = null;
+let filteredData = [...stockData];
+let batchItems   = [];
+
+/* ── Helpers ── */
+function levelLabel(level) {
+  return level === 'critical' ? 'Critical' : level === 'low' ? 'Low' : 'Warning';
+}
+
+function computeLevel(qty) {
+  if (qty < 10)  return 'critical';
+  if (qty <= 40) return 'low';
+  return 'warning';
+}
+
+function levelBadge(level) {
+  if (level === 'critical') return '<span class="badge badge-red">Critical</span>';
+  if (level === 'low')      return '<span class="badge badge-orange">Low</span>';
+  return '<span class="badge badge-green">Warning</span>';
+}
+
+function levelFill(qty, maxQty, level) {
+  const pct = Math.min(100, Math.round(qty / maxQty * 100));
+  const cls      = level === 'critical' ? 'fill-red'    : level === 'low' ? 'fill-orange'    : 'fill-green';
+  const labelCls = level === 'critical' ? 'label-red'   : level === 'low' ? 'label-orange'   : 'label-green';
+  return `
+    <div class="stock-bar-wrap">
+      <div class="stock-bar"><div class="stock-bar-fill ${cls}" style="width:${pct}%"></div></div>
+      <span class="stock-bar-label ${labelCls}">${pct}%</span>
+    </div>`;
+}
+
+/* ── Stat Cards ── */
+function updateStatCards() {
+  document.getElementById('count-critical').textContent = stockData.filter(p => p.level === 'critical').length;
+  document.getElementById('count-low').textContent      = stockData.filter(p => p.level === 'low').length;
+  document.getElementById('count-warning').textContent  = stockData.filter(p => p.level === 'warning').length;
+}
+
+/* ── Table ── */
+function renderTable() {
+  document.getElementById('stock-tbody').innerHTML = filteredData.map(p => `
+    <tr>
+      <td><div class="product-name">${p.name}</div><div class="product-cat">${p.category}</div></td>
+      <td>${p.category}</td>
+      <td>${p.qty} pcs</td>
+      <td>${levelBadge(p.level)} ${levelFill(p.qty, p.maxQty, p.level)}</td>
+      <td>
+        <button class="btn-restock" onclick="openRestock(${p.id})"><i class="fa-solid fa-plus" style="font-size:10px;"></i> Restock</button>
+        <button class="btn-remove"  onclick="openRemove(${p.id})">Remove</button>
+      </td>
+    </tr>
+  `).join('');
+  updateStatCards();
+}
+
+/* ── Filters ── */
+function applyFilters() {
+  const q     = document.getElementById('search-input').value.toLowerCase();
+  const level = document.getElementById('level-filter').value;
+  filteredData = stockData.filter(p => {
+    const matchSearch = p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
+    const matchLevel  = level === 'ALL' || p.level === level;
+    return matchSearch && matchLevel;
+  });
+  renderTable();
+}
+
+/* ── Single Restock ── */
+function openRestock(id) {
+  currentItem = stockData.find(p => p.id === id);
+  document.getElementById('rs-prod-name').textContent = currentItem.name;
+  document.getElementById('rs-prod-meta').textContent = currentItem.category + ' · ' + levelLabel(currentItem.level) + ' stock';
+  const pct  = Math.min(100, Math.round(currentItem.qty / currentItem.maxQty * 100));
+  const fill = document.getElementById('rs-bar-fill');
+  fill.style.width = pct + '%';
+  fill.className   = 'modal-stock-fill ' + (currentItem.level === 'critical' ? 'fill-red' : currentItem.level === 'low' ? 'fill-orange' : 'fill-green');
+  const countEl    = document.getElementById('rs-bar-count');
+  countEl.textContent = currentItem.qty + ' pcs';
+  countEl.style.color = currentItem.level === 'critical' ? 'var(--accent-red)' : currentItem.level === 'low' ? 'var(--accent-orange)' : 'var(--accent-green)';
+  document.getElementById('rs-qty').value      = '';
+  document.getElementById('rs-date').value     = new Date().toISOString().split('T')[0];
+  document.getElementById('rs-supplier').value = '';
+  document.getElementById('rs-expiry').value   = '';
+  document.getElementById('rs-notes').value    = '';
+  document.getElementById('s-current').textContent = currentItem.qty + ' pcs';
+  document.getElementById('s-adding').textContent  = '+ 0 pcs';
+  document.getElementById('s-total').textContent   = currentItem.qty + ' pcs';
+  document.getElementById('restockModal').classList.add('open');
+}
+
+function updateSummary() {
+  if (!currentItem) return;
+  const adding = parseInt(document.getElementById('rs-qty').value) || 0;
+  document.getElementById('s-adding').textContent = '+ ' + adding + ' pcs';
+  document.getElementById('s-total').textContent  = (currentItem.qty + adding) + ' pcs';
+}
+
+function confirmRestock() {
+  if (!currentItem) return;
+  const adding = parseInt(document.getElementById('rs-qty').value) || 0;
+  if (!adding) { showToast('Please enter a quantity to add', 'red'); return; }
+  currentItem.qty   += adding;
+  currentItem.level  = computeLevel(currentItem.qty);
+  applyFilters();
+  closeModal('restockModal');
+  showToast('+' + adding + ' pcs added to ' + currentItem.name, 'green');
+}
+
+/* ── Single Remove ── */
+function openRemove(id) {
+  currentItem = stockData.find(p => p.id === id);
+  document.getElementById('rm-prod-name').textContent = currentItem.name;
+  document.getElementById('rm-prod-meta').textContent = currentItem.category + ' · ' + currentItem.qty + ' pcs remaining';
+  document.getElementById('rm-reason').value = '';
+  document.getElementById('rm-notes').value  = '';
+  document.getElementById('removeModal').classList.add('open');
+}
+
+function confirmRemove() {
+  if (!currentItem) return;
+  const reason = document.getElementById('rm-reason').value;
+  if (!reason) { showToast('Please select a reason for removal', 'red'); return; }
+  const idx = stockData.findIndex(p => p.id === currentItem.id);
+  if (idx > -1) stockData.splice(idx, 1);
+  applyFilters();
+  closeModal('removeModal');
+  showToast(currentItem.name + ' removed from inventory', 'red');
+}
+
+/* ── Batch Restock ── */
+function openBatchModal() {
+  batchItems = [];
+  document.getElementById('batch-search').value = '';
+  hideBatchDropdown();
+  renderBatchList();
+  document.getElementById('batchModal').classList.add('open');
+}
+
+function filterBatchMedicines() {
+  const query    = document.getElementById('batch-search').value.trim().toLowerCase();
+  const dropdown = document.getElementById('batch-dropdown');
+  dropdown.innerHTML = '';
+
+  if (!query) { hideBatchDropdown(); return; }
+
+  const results = stockData.filter(p =>
+    p.name.toLowerCase().includes(query) || p.category.toLowerCase().includes(query)
+  );
+
+  if (!results.length) { hideBatchDropdown(); return; }
+
+  results.forEach(p => {
+    const already = batchItems.some(i => i.id === p.id);
+    const levelColor = p.level === 'critical' ? '#d94f4f' : p.level === 'low' ? '#e89b3a' : '#2eb872';
+    const opt = document.createElement('div');
+    opt.className = 'medicine-option' + (already ? ' already-added' : '');
+    opt.innerHTML = `
+      <span class="med-opt-name">${p.name}</span>
+      <span class="med-opt-cat">${p.category}</span>
+      <span class="med-opt-stock" style="color:${already ? 'rgba(255,255,255,0.4)' : levelColor}">
+        ${already ? '✓ Added' : p.qty + ' pcs · ' + levelLabel(p.level)}
+      </span>
+    `;
+    if (!already) opt.onclick = () => addBatchItem(p);
+    dropdown.appendChild(opt);
+  });
+
+  dropdown.classList.add('show');
+}
+
+function hideBatchDropdown() {
+  const d = document.getElementById('batch-dropdown');
+  d.classList.remove('show');
+  d.innerHTML = '';
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.modal-search-wrap')) hideBatchDropdown();
+});
+
+function addBatchItem(p) {
+  if (batchItems.some(i => i.id === p.id)) return;
+  batchItems.push({ ...p, addQty: 0 });
+  renderBatchList();
+  document.getElementById('batch-search').value = '';
+  hideBatchDropdown();
+}
+
+function renderBatchList() {
+  const list    = document.getElementById('batch-list');
+  const empty   = document.getElementById('batch-list-empty');
+  const count   = document.getElementById('batch-item-count');
+  const saveBtn = document.getElementById('btn-batch-save');
+
+  list.querySelectorAll('.modal-item').forEach(el => el.remove());
+
+  if (!batchItems.length) {
+    empty.style.display = 'flex';
+    count.textContent   = '0 items added';
+    saveBtn.disabled    = true;
+    return;
+  }
+
+  empty.style.display = 'none';
+  count.textContent   = batchItems.length + (batchItems.length === 1 ? ' item added' : ' items added');
+  saveBtn.disabled    = false;
+
+  batchItems.forEach((item, idx) => {
+    const newQty  = item.qty + item.addQty;
+    const newLevel = computeLevel(newQty);
+    const color   = newLevel === 'critical' ? '#d94f4f' : newLevel === 'low' ? '#e89b3a' : '#2eb872';
+    const oldColor = item.level === 'critical' ? '#d94f4f' : item.level === 'low' ? '#e89b3a' : '#2eb872';
+
+    const row = document.createElement('div');
+    row.className = 'modal-item';
+    row.innerHTML = `
+      <div>
+        <div class="modal-item-name">${item.name}</div>
+        <div class="modal-item-cat">${item.category}</div>
+      </div>
+      <div class="modal-item-stock" style="color:${oldColor}; font-weight:700;">
+        ${item.qty} pcs
+      </div>
+      <div>
+        <input
+          type="number"
+          class="modal-item-qty"
+          min="0"
+          value="${item.addQty > 0 ? item.addQty : ''}"
+          placeholder="0"
+          oninput="updateBatchQty(${idx}, this.value)"
+        >
+      </div>
+      <div class="modal-item-new" id="batch-new-${idx}" style="color:${color}; font-size:13px; font-weight:700;">
+        ${item.addQty > 0 ? '+' + item.addQty + ' → ' : ''}${newQty} pcs
+      </div>
+      <button class="btn-remove-item" onclick="removeBatchItem(${idx})" title="Remove">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function updateBatchQty(idx, value) {
+  batchItems[idx].addQty = parseInt(value) || 0;
+  const item     = batchItems[idx];
+  const newQty   = item.qty + item.addQty;
+  const newLevel = computeLevel(newQty);
+  const color    = newLevel === 'critical' ? '#d94f4f' : newLevel === 'low' ? '#e89b3a' : '#2eb872';
+  const el       = document.getElementById('batch-new-' + idx);
+  if (el) {
+    el.style.color = color;
+    el.textContent = (item.addQty > 0 ? '+' + item.addQty + ' → ' : '') + newQty + ' pcs';
+  }
+}
+
+function removeBatchItem(idx) {
+  batchItems.splice(idx, 1);
+  renderBatchList();
+}
+
+function saveBatch() {
+  const valid = batchItems.filter(i => i.addQty > 0);
+  if (!valid.length) { showToast('Please enter a quantity for at least one medicine', 'red'); return; }
+
+  valid.forEach(item => {
+    const target = stockData.find(p => p.id === item.id);
+    if (!target) return;
+    target.qty   += item.addQty;
+    target.level  = computeLevel(target.qty);
+  });
+
+  const count = valid.length;
+  batchItems = [];
+  applyFilters();
+  closeModal('batchModal');
+  showToast(`Batch restock applied to ${count} product${count > 1 ? 's' : ''}`, 'green');
+}
+
+/* ── Shared ── */
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('open'); });
+});
+
+function showToast(msg, type = 'green') {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.className = 'toast toast-' + type + ' show';
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+/* ── Init ── */
+applyFilters();
+</script>
+</body>
+</html>
