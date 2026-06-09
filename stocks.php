@@ -1,3 +1,8 @@
+<?php
+require_once 'config.php';
+require_once 'auth_guard.php';
+require_role('admin');
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,60 +19,7 @@
 </head>
 <body>
 
-<<<<<<< Updated upstream:stocks.html
-<div class="sidebar">
-  <div class="sidebar-logo">
-    <div class="logo-icon"></div>
-    <div class="logo-text">
-      <h3>PharmaTrack</h3>
-      <span>Admin</span>
-    </div>
-  </div>
-
-  <nav class="sidebar-nav">
-    <div class="sidebar-section-label">MAIN</div>
-    <a href="dashboard.html">
-      <i class="fa-solid fa-chart-bar"></i>
-      <span>Dashboard</span>
-    </a>
-    <a href="products.html">
-      <i class="fa-solid fa-capsules"></i>
-      <span>Products</span>
-    </a>
-    <a href="stocks.html" class="active">
-      <i class="fa-solid fa-cart-shopping"></i>
-      <span>Stocks</span>
-    </a>
-    <a href="#">
-      <i class="fa-solid fa-user"></i>
-      <span>Users</span>
-    </a>
-
-    <div class="sidebar-section-label">MONITORING</div>
-    <a href="#">
-      <i class="fa-regular fa-clock"></i>
-      <span>Expiry</span>
-    </a>
-    <a href="#">
-      <i class="fa-solid fa-triangle-exclamation"></i>
-      <span>Low Stock</span>
-    </a>
-  </nav>
-
-  <div class="sidebar-footer">
-    <div class="avatar">AD</div>
-    <div class="admin-info">
-      <div class="name">Admin</div>
-      <div class="role">Administrator</div>
-    </div>
-    <a href="admin-login.html" class="logout-btn" title="Logout">
-      <i class="fa-solid fa-right-from-bracket"></i>
-    </a>
-  </div>
-</div>
-=======
-<?php include 'includes/sidebar.php'; ?>
->>>>>>> Stashed changes:stocks.php
+<?php include('sidebar.php'); ?>
 
 <div class="main-content">
 
@@ -105,35 +57,32 @@
 
           <div class="form-group">
             <label class="form-label">Select Medicine</label>
-            <select class="form-select">
+            <select class="form-select" id="medicine-in" onchange="loadMedicineStock('in')">
               <option value="" disabled selected>MEDICINE</option>
-              <option>Biogesic</option>
-              <option>Neozep</option>
-              <option>Cetirizine</option>
-              <option>Amoxicillin</option>
+              <?php
+              
+              $medRes  = $conn->query('SELECT id, product_name, quantity FROM products ORDER BY product_name ASC');
+              while ($m = $medRes->fetch_assoc()):
+              ?>
+              <option value="<?= $m['id'] ?>" data-qty="<?= $m['quantity'] ?>">
+                <?= htmlspecialchars($m['product_name']) ?>
+              </option>
+              <?php endwhile;  ?>
             </select>
           </div>
 
-          <div class="form-row">
+          <div class="form-row" style="grid-template-columns:1fr 1fr;">
             <div class="form-group">
               <label class="form-label">Quantity</label>
               <input type="number" class="form-input" value="0" min="0" id="qty-in">
             </div>
             <div class="form-group">
               <label class="form-label">Date Received</label>
-              <input type="date" class="form-input">
-            </div>
-            <div class="form-group" style="grid-column: span 2 / span 2;" hidden></div>
-          </div>
-
-          <div class="form-row" style="grid-template-columns:1fr 1fr;">
-            <div class="form-group">
-              <label class="form-label">Date Received</label>
-              <input type="date" class="form-input">
+              <input type="date" class="form-input" id="date-in" value="">
             </div>
             <div class="form-group">
               <label class="form-label">Expiry Date</label>
-              <input type="date" class="form-input">
+              <input type="date" class="form-input" id="expiry-in">
             </div>
           </div>
 
@@ -145,7 +94,7 @@
           <div class="stock-summary">
             <div class="stock-summary-row">
               <span>Current Stock</span>
-              <span>45 pcs</span>
+              <span id="current-stock-in">0 pcs</span>
             </div>
             <div class="stock-summary-row">
               <span>To be added</span>
@@ -153,12 +102,12 @@
             </div>
             <div class="stock-summary-row total">
               <span>New Total</span>
-              <span id="new-total-in">45 pcs</span>
+              <span id="new-total-in">0 pcs</span>
             </div>
           </div>
 
           <div style="display:flex; justify-content:flex-end;">
-            <button class="btn-confirm" href="#">Confirm Stock In</button>
+            <button class="btn-confirm" onclick="confirmStockIn()">Confirm Stock In</button>
           </div>
         </div>
 
@@ -175,48 +124,31 @@
                 <th>Quantity</th>
               </tr>
             </thead>
+            
             <tbody>
+              <?php
+                
+                $histRes  = $conn->query("
+                SELECT sl.quantity, sl.date, p.product_name, p.category
+                FROM stock_logs sl
+                JOIN products p ON p.id = sl.product_id
+                WHERE sl.type = 'in'
+                ORDER BY sl.created_at DESC
+                LIMIT 10
+                ");
+                while ($h = $histRes->fetch_assoc()):
+              ?>
               <tr>
                 <td>
-                  <div class="product-name">Biogesic</div>
-                  <div class="product-cat">Analgesic</div>
+                  <div class="product-name"><?= htmlspecialchars($h['product_name']) ?></div>
+                  <div class="product-cat"><?= htmlspecialchars($h['category']) ?></div>
                 </td>
-                <td>April 10</td>
-                <td>+ 50 pcs</td>
+                <td><?= htmlspecialchars($h['date']) ?></td>
+                <td>+ <?= (int)$h['quantity'] ?> pcs</td>
               </tr>
-              <tr>
-                <td>
-                  <div class="product-name">Biogesic</div>
-                  <div class="product-cat">Analgesic</div>
-                </td>
-                <td>April 9</td>
-                <td>+ 50 pcs</td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="product-name">Cetirizine</div>
-                  <div class="product-cat">Antihistamine</div>
-                </td>
-                <td>April 9</td>
-                <td>+ 50 pcs</td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="product-name">Amoxicilin</div>
-                  <div class="product-cat">Antibiotic</div>
-                </td>
-                <td>April 9</td>
-                <td>+ 50 pcs</td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="product-name">Amoxicilin</div>
-                  <div class="product-cat">Antibiotic</div>
-                </td>
-                <td>April 9</td>
-                <td>+ 50 pcs</td>
-              </tr>
+              <?php endwhile;  ?>
             </tbody>
+
           </table>
         </div>
 
@@ -231,12 +163,17 @@
 
           <div class="form-group">
             <label class="form-label">Select Medicine</label>
-            <select class="form-select">
+            <select class="form-select" id="medicine-out" onchange="loadMedicineStock('out')">
               <option value="" disabled selected>MEDICINE</option>
-              <option>Biogesic</option>
-              <option>Neozep</option>
-              <option>Cetirizine</option>
-              <option>Amoxicillin</option>
+              <?php
+              
+              $medRes  = $conn->query('SELECT id, product_name, quantity FROM products ORDER BY product_name ASC');
+              while ($m = $medRes->fetch_assoc()):
+              ?>
+              <option value="<?= $m['id'] ?>" data-qty="<?= $m['quantity'] ?>">
+                <?= htmlspecialchars($m['product_name']) ?>
+              </option>
+              <?php endwhile;  ?>
             </select>
           </div>
 
@@ -247,7 +184,7 @@
             </div>
             <div class="form-group">
               <label class="form-label">Date Sold / Used</label>
-              <input type="date" class="form-input">
+              <input type="date" class="form-input" id="date-out">
             </div>
           </div>
 
@@ -259,7 +196,7 @@
           <div class="stock-summary">
             <div class="stock-summary-row">
               <span>Current Stock</span>
-              <span>45 pcs</span>
+              <span id="current-stock-out">0 pcs</span>
             </div>
             <div class="stock-summary-row">
               <span>To be deducted</span>
@@ -267,12 +204,12 @@
             </div>
             <div class="stock-summary-row total">
               <span>New Total</span>
-              <span id="new-total-out">45 pcs</span>
+              <span id="new-total-out">0 pcs</span>
             </div>
           </div>
 
           <div style="display:flex; justify-content:flex-end;">
-            <button class="btn-confirm" href="#">Confirm Stock Out</button>
+            <button class="btn-confirm" onclick="confirmStockOut()">Confirm Stock Out</button>
           </div>
         </div>
 
@@ -290,46 +227,27 @@
               </tr>
             </thead>
             <tbody>
+              <?php
+                
+                $histRes  = $conn->query("
+                SELECT sl.quantity, sl.date, p.product_name, p.category
+                FROM stock_logs sl
+                JOIN products p ON p.id = sl.product_id
+                WHERE sl.type = 'out'
+                ORDER BY sl.created_at DESC
+                LIMIT 10
+                ");
+                while ($h = $histRes->fetch_assoc()):
+              ?>
               <tr>
                 <td>
-                  <div class="product-name">Biogesic</div>
-                  <div class="product-cat">Analgesic</div>
+                  <div class="product-name"><?= htmlspecialchars($h['product_name']) ?></div>
+                  <div class="product-cat"><?= htmlspecialchars($h['category']) ?></div>
                 </td>
-                <td>April 10</td>
-                <td>- 5 pcs</td>
+                <td><?= htmlspecialchars($h['date']) ?></td>
+                <td>- <?= (int)$h['quantity'] ?> pcs</td>
               </tr>
-              <tr>
-                <td>
-                  <div class="product-name">Biogesic</div>
-                  <div class="product-cat">Analgesic</div>
-                </td>
-                <td>April 9</td>
-                <td>- 5 pcs</td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="product-name">Cetirizine</div>
-                  <div class="product-cat">Antihistamine</div>
-                </td>
-                <td>April 9</td>
-                <td>- 5 pcs</td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="product-name">Amoxicilin</div>
-                  <div class="product-cat">Antibiotic</div>
-                </td>
-                <td>April 9</td>
-                <td>- 5 pcs</td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="product-name">Amoxicilin</div>
-                  <div class="product-cat">Antibiotic</div>
-                </td>
-                <td>April 9</td>
-                <td>- 5 pcs</td>
-              </tr>
+              <?php endwhile;  ?>
             </tbody>
           </table>
         </div>
@@ -341,7 +259,28 @@
 </div>
 
 <script>
-  const currentStock = 45;
+  let currentStockIn  = 0;
+  let currentStockOut = 0;
+
+  function loadMedicineStock(mode) {
+    const select = document.getElementById('medicine-' + mode);
+    const opt    = select.options[select.selectedIndex];
+    const qty    = parseInt(opt?.dataset.qty) || 0;
+
+    if (mode === 'in') {
+      currentStockIn = qty;
+      document.getElementById('current-stock-in').textContent = qty + ' pcs';
+      document.getElementById('new-total-in').textContent     = qty + ' pcs';
+      document.getElementById('to-add-in').textContent        = '0 pcs';
+      document.getElementById('qty-in').value = 0;
+    } else {
+      currentStockOut = qty;
+      document.getElementById('current-stock-out').textContent = qty + ' pcs';
+      document.getElementById('new-total-out').textContent     = qty + ' pcs';
+      document.getElementById('to-deduct-out').textContent     = '0 pcs';
+      document.getElementById('qty-out').value = 0;
+    }
+  }
 
   function switchMode(mode) {
     const toggleIn  = document.getElementById('toggle-in');
@@ -371,14 +310,70 @@
   document.getElementById('qty-in').addEventListener('input', function() {
     const v = parseInt(this.value) || 0;
     document.getElementById('to-add-in').textContent    = v + ' pcs';
-    document.getElementById('new-total-in').textContent = (currentStock + v) + ' pcs';
+    document.getElementById('new-total-in').textContent = (currentStockIn + v) + ' pcs';
   });
 
   document.getElementById('qty-out').addEventListener('input', function() {
     const v = parseInt(this.value) || 0;
     document.getElementById('to-deduct-out').textContent = v + ' pcs';
-    document.getElementById('new-total-out').textContent  = Math.max(0, currentStock - v) + ' pcs';
+    document.getElementById('new-total-out').textContent  = Math.max(0, currentStockOut - v) + ' pcs';
   });
+
+  function confirmStockIn() {
+  const select  = document.getElementById('medicine-in');
+  const id      = parseInt(select.value);
+  const qty     = parseInt(document.getElementById('qty-in').value) || 0;
+  const date    = document.getElementById('date-in').value || new Date().toISOString().split('T')[0];
+  const expiry  = document.getElementById('expiry-in').value || '';
+  const notes   = document.querySelector('#section-in textarea').value;
+
+  if (!id)  { alert('Please select a medicine.'); return; }
+  if (!qty) { alert('Please enter a quantity.'); return; }
+
+  fetch('save_stock.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'in', product_id: id, qty, date, expiry, notes })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      alert('Stock In saved!');
+      location.reload();
+    } else {
+      alert('Error: ' + (data.message || 'Unknown error'));
+    }
+  })
+  .catch(() => alert('Server error — check save_stock.php'));
+}
+
+function confirmStockOut() {
+  const select = document.getElementById('medicine-out');
+  const id     = parseInt(select.value);
+  const qty    = parseInt(document.getElementById('qty-out').value) || 0;
+  const date   = document.getElementById('date-out').value || new Date().toISOString().split('T')[0];
+  const notes  = document.querySelector('#section-out textarea').value;
+
+  if (!id)  { alert('Please select a medicine.'); return; }
+  if (!qty) { alert('Please enter a quantity.'); return; }
+  if (qty > currentStockOut) { alert('Not enough stock!'); return; }
+
+  fetch('save_stock.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'out', product_id: id, qty, date, notes })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      alert('Stock Out saved!');
+      location.reload();
+    } else {
+      alert('Error: ' + (data.message || 'Unknown error'));
+    }
+  })
+  .catch(() => alert('Server error — check save_stock.php'));
+}
 </script>
 
 </body>

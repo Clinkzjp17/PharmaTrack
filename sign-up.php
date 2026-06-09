@@ -1,3 +1,32 @@
+<?php
+require_once 'config.php';
+
+if(isset($_POST['register'])){
+
+    $username = trim($_POST['username']);
+    $password = password_hash(
+        $_POST['password'],
+        PASSWORD_DEFAULT
+    );
+
+    $stmt = $conn->prepare(
+        "INSERT INTO users
+        (username,password,role)
+        VALUES (?,?, 'user')"
+    );
+
+    $stmt->bind_param(
+        "ss",
+        $username,
+        $password
+    );
+
+    $stmt->execute();
+
+    header("Location: user-login.php");
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,9 +36,8 @@
 
 <link rel="stylesheet" href="user-admin-login.css">
 
-<!-- Google Font -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<!-- Icons -->
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 </head>
@@ -17,7 +45,6 @@
 
 <div class="container">
 
-     <!-- LEFT -->
     <div class="left">
 
         <div class="logo">
@@ -46,14 +73,13 @@
 
     </div>
 
-    <!-- right -->
     <div class="right">
         <div class="login-box" style="margin-top: 20px; padding: 30px;">
             <h1>Create an Account</h1>
             <p>Join PharmaTrack to monitor medicine</p>
 
            <div class="forma">
-        <form>
+        <form method="POST">
 
             <label for="fullname">Full Name</label>
             <input type="text" id="fullname" placeholder="Enter your full name" required style="margin-bottom: 10px;">
@@ -64,21 +90,15 @@
             <label for="password">Password</label>
             <input type="password" id="password" placeholder="Create a password" required style="margin-bottom: 10px;">
 
-            <button type="submit" style="margin-top: 10px;">Register Account</button>
-
+            <button type="submit" name="register" style="margin-top: 10px;">Register Account</button>
         </form>
-</div>
- <p class="error" id="error"></p>
-
-        <p style="margin-top:15px; font-size:13px;">
-            Already have an account? <a style="color: rgb(21, 74, 98);" href="user-login.php">Login here</a>
-        </p>
-
+        </div>
+            <p class="error" id="error"></p>
+            <p style="margin-top:15px; font-size:13px;"> Already have an account? <a style="color: rgb(21, 74, 98);" href="user-login.php">Login here</a></p>
         </div>
     </div>
 
 </div>
-
 
 </body>
 </html>

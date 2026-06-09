@@ -4,8 +4,8 @@ require_once 'config.php';
 $error   = '';
 $success = '';
 $mode    = isset($_GET['mode']) && $_GET['mode'] === 'register' ? 'register' : 'login';
+$role    = 'admin'; // this page is admin-only
 
-// Already logged in?
 if (isset($_SESSION['user_id'])) {
     $dest = $_SESSION['role'] === 'admin' ? 'dashboard.php' : 'user-dashboard.php';
     header("Location: $dest");
@@ -22,13 +22,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($username) || empty($password)) {
             $error = 'Please fill in all fields.';
         } else {
-            $stmt = $conn->prepare("SELECT id, username, password FROM users WHERE username = ? AND role = 'user'");
+            $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE username = ? AND role = 'admin'");
             $stmt->bind_param("s", $username);
             $stmt->execute();
             $result = $stmt->get_result();
 
             if ($result->num_rows === 0) {
-                $error = 'No user account found with that username.';
+                $error = 'No admin account found with that username.';
             } else {
                 $user = $result->fetch_assoc();
                 if (!password_verify($password, $user['password'])) {
@@ -36,8 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $_SESSION['user_id']  = $user['id'];
                     $_SESSION['username'] = $user['username'];
-                    $_SESSION['role']     = 'user';
-                    header("Location: user-dashboard.php");
+                    $_SESSION['role']     = 'admin';
+                    header("Location: dashboard.php");
                     exit;
                 }
             }
@@ -57,16 +57,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($password !== $confirm) {
             $error = 'Passwords do not match.';
         } else {
-            $chk = $conn->prepare("SELECT id FROM users WHERE username = ? AND role = 'user'");
+            $chk = $conn->prepare("SELECT id FROM users WHERE username = ? AND role = 'admin'");
             $chk->bind_param("s", $username);
             $chk->execute();
             $chk->store_result();
 
             if ($chk->num_rows > 0) {
-                $error = 'That username is already taken.';
+                $error = 'An admin account with that username already exists.';
             } else {
                 $hash = password_hash($password, PASSWORD_BCRYPT);
-                $ins  = $conn->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, 'user')");
+                $ins  = $conn->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, 'admin')");
                 $ins->bind_param("ss", $username, $hash);
                 if ($ins->execute()) {
                     $success = 'Account created! You can now sign in.';
@@ -86,18 +86,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>User <?= $mode === 'register' ? 'Register' : 'Login' ?> — PharmaTrack</title>
-
-<link rel="stylesheet" href="login.css">
+<title>PharmaTrack — Admin <?= $mode === 'register' ? 'Register' : 'Login' ?></title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="login.css">
 </head>
 <body>
 
 <div class="container">
 
     <div class="left">
-
         <div class="logo">
             <div class="icon-plus"></div>
             <h2>PharmaTrack</h2>
@@ -105,15 +103,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <div class="menu">
-            <a href="index.php">
+            <a href="index.php" class="active">
                 <i class="fa-solid fa-shield-halved"></i>
                 <div>
                     <div class="m-title">Admin</div>
                     <div class="m-desc">Full access and control</div>
                 </div>
             </a>
-
-            <a href="user-login.php" class="active">
+            <a href="user-login.php">
                 <i class="fa-solid fa-user"></i>
                 <div>
                     <div class="m-title">User</div>
@@ -121,21 +118,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </a>
         </div>
-
     </div>
 
     <div class="right">
         <div class="login-box">
 
             <?php if ($mode === 'login'): ?>
-    
-            <div style="flex:1;"></div>
-            <h1>Hello There!</h1>
-            <p>Sign in to check medicine availability</p>
-            <div style="flex:1;"></div>
+        
+            <h1>Welcome back!</h1>
+            <p>Sign in as Admin to continue</p>
 
             <div class="forma">
-                <form method="POST">
+                <form method="POST" action="index.php">
                     <input type="hidden" name="action" value="login">
 
                     <label for="username">Username</label>
@@ -150,7 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                            required autocomplete="current-password">
 
                     <button type="submit">
-                        <i class="fa-solid fa-right-to-bracket"></i>&nbsp; Sign in as User
+                        <i class="fa-solid fa-right-to-bracket"></i>&nbsp; Sign in as Admin
                     </button>
                 </form>
 
@@ -163,14 +157,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <?php else: ?>
-        
-            <div style="flex:1;"></div>
+           
             <h1>Create Account</h1>
-            <p>Register to check medicine availability</p>
-            <div style="flex:1;"></div>
+            <p>Register a new Admin account</p>
 
             <div class="forma">
-                <form method="POST">
+                <form method="POST" action="index.php?mode=register">
                     <input type="hidden" name="action" value="register">
 
                     <label for="username">Username</label>
@@ -190,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                            required autocomplete="new-password">
 
                     <button type="submit">
-                        <i class="fa-solid fa-user-plus"></i>&nbsp; Create Account
+                        <i class="fa-solid fa-user-plus"></i>&nbsp; Create Admin Account
                     </button>
                 </form>
 
@@ -207,6 +199,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
 </div>
-
 </body>
 </html>

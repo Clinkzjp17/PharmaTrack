@@ -1,3 +1,8 @@
+<?php
+require_once 'config.php';
+require_once 'auth_guard.php';
+require_role('admin');
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,7 +15,7 @@
 </head>
 <body>
 
-<?php include 'includes/sidebar.php'; ?>
+<?php include('sidebar.php'); ?>
 
 <div class="main-content">
   <div class="page-header">
@@ -59,7 +64,6 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th><input type="checkbox" id="select-all" onchange="toggleSelectAll(this)"></th>
             <th>Product</th>
             <th>Category</th>
             <th>Quantity</th>
@@ -268,7 +272,6 @@ function daysClass(status) {
 function renderTable() {
   document.getElementById('expiry-tbody').innerHTML = filteredData.map(p => `
     <tr>
-      <td><input type="checkbox" class="row-check" data-id="${p.id}" onchange="toggleCheck(${p.id}, this.checked)" ${selectedIds.has(p.id) ? 'checked' : ''}></td>
       <td><div class="product-name">${p.name}</div></td>
       <td>${p.category}</td>
       <td>${p.qty} pcs</td>
@@ -322,11 +325,27 @@ function openUpdate(id) {
 
 function saveUpdate() {
   if (!currentItem) return;
-  const qty = parseInt(document.getElementById('u-qty').value);
-  if (!isNaN(qty)) currentItem.qty = qty;
-  applyFilters();
-  closeModal('updateModal');
-  showToast('Expiry details updated for ' + currentItem.name, 'green');
+  const qty    = parseInt(document.getElementById('u-qty').value);
+  const expiry = document.getElementById('u-expiry-date').value;
+
+  fetch('update_expiry.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: currentItem.id, qty: qty, expiry: expiry })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      if (!isNaN(qty)) currentItem.qty = qty;
+      if (expiry) currentItem.expiry = expiry;
+      applyFilters();
+      closeModal('updateModal');
+      showToast('Expiry details updated for ' + currentItem.name, 'green');
+    } else {
+      showToast(data.message || 'Update failed', 'red');
+    }
+  })
+  .catch(() => showToast('Server error — check update_expiry.php', 'red'));
 }
 
 function openRemove(id) {

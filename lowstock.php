@@ -1,3 +1,8 @@
+<?php
+require_once 'config.php';
+require_once 'auth_guard.php';
+require_role('admin');
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,7 +15,7 @@
 </head>
 <body>
 
-<?php include 'includes/sidebar.php'; ?>
+<?php include('sidebar.php'); ?>
 
 <div class="main-content">
   <div class="page-header">
@@ -73,7 +78,6 @@
   </div>
 </div>
 
-<!-- ── Restock Modal ───────────────────────────────────────────────── -->
 <div class="modal-overlay" id="restockModal">
   <div class="modal-box">
     <div class="modal-header">
@@ -144,7 +148,6 @@
   </div>
 </div>
 
-<!-- ── Remove Product Modal ────────────────────────────────────────── -->
 <div class="modal-overlay" id="removeModal">
   <div class="modal-box">
     <div class="modal-header">
@@ -191,7 +194,6 @@
   </div>
 </div>
 
-<!-- ── Batch Restock Modal ─────────────────────────────────────────── -->
 <div class="modal-overlay" id="batchModal">
   <div class="modal-box modal-box-wide">
     <div class="modal-header">
@@ -202,7 +204,6 @@
       <button class="modal-close" onclick="closeModal('batchModal')">×</button>
     </div>
 
-    <!-- Search -->
     <div class="modal-search-wrap">
       <div class="modal-search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
@@ -211,7 +212,6 @@
       <div class="medicine-dropdown" id="batch-dropdown"></div>
     </div>
 
-    <!-- List header -->
     <div class="modal-list-header">
       <span>Medicine</span>
       <span>Current Stock</span>
@@ -220,7 +220,6 @@
       <span></span>
     </div>
 
-    <!-- List body -->
     <div class="modal-list" id="batch-list">
       <div class="modal-list-empty" id="batch-list-empty">
         <i class="fa-solid fa-capsules"></i>
@@ -242,28 +241,31 @@
   </div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast">
   <i class="fa-solid fa-check-circle"></i>
   <span id="toast-msg">Done!</span>
 </div>
 
 <script>
-let stockData = [
-  { id:1, name:'Amoxicillin 500mg',   category:'Antibiotic',       qty:5,  maxQty:200, level:'critical' },
-  { id:2, name:'Cetirizine 10mg',     category:'Antihistamine',    qty:0,  maxQty:150, level:'critical' },
-  { id:3, name:'Ascorbic Acid 500mg', category:'Supplement',       qty:8,  maxQty:200, level:'critical' },
-  { id:4, name:'Biogesic 500mg',      category:'Analgesic',        qty:22, maxQty:200, level:'low'      },
-  { id:5, name:'Neozep Forte',        category:'Cold & Flu',       qty:35, maxQty:200, level:'low'      },
-  { id:6, name:'Losartan 50mg',       category:'Antihypertensive', qty:60, maxQty:200, level:'warning'  },
-  { id:7, name:'Metformin 500mg',     category:'Antidiabetic',     qty:75, maxQty:200, level:'warning'  },
+const stockData = [
+  <?php
+    $lsConn = new mysqli('localhost', 'root', '', 'pharmatrack');
+    $lsRes  = $lsConn->query("SELECT id, product_name, category, quantity FROM products WHERE quantity <= 100 ORDER BY quantity ASC");
+    $lsRows = [];
+    while ($r = $lsRes->fetch_assoc()) {
+      $qty   = (int)$r['quantity'];
+      $level = $qty < 10 ? 'critical' : ($qty <= 40 ? 'low' : 'warning');
+      $lsRows[] = '{id:' . $r['id'] . ',name:' . json_encode($r['product_name']) . ',category:' . json_encode($r['category']) . ',qty:' . $qty . ',level:"' . $level . '"}';
+    }
+    echo implode(",\n  ", $lsRows);
+    
+  ?>
 ];
 
 let currentItem  = null;
 let filteredData = [...stockData];
 let batchItems   = [];
 
-/* ── Helpers ── */
 function levelLabel(level) {
   return level === 'critical' ? 'Critical' : level === 'low' ? 'Low' : 'Warning';
 }
@@ -291,14 +293,12 @@ function levelFill(qty, maxQty, level) {
     </div>`;
 }
 
-/* ── Stat Cards ── */
 function updateStatCards() {
   document.getElementById('count-critical').textContent = stockData.filter(p => p.level === 'critical').length;
   document.getElementById('count-low').textContent      = stockData.filter(p => p.level === 'low').length;
   document.getElementById('count-warning').textContent  = stockData.filter(p => p.level === 'warning').length;
 }
 
-/* ── Table ── */
 function renderTable() {
   document.getElementById('stock-tbody').innerHTML = filteredData.map(p => `
     <tr>
@@ -361,11 +361,28 @@ function confirmRestock() {
   if (!currentItem) return;
   const adding = parseInt(document.getElementById('rs-qty').value) || 0;
   if (!adding) { showToast('Please enter a quantity to add', 'red'); return; }
-  currentItem.qty   += adding;
-  currentItem.level  = computeLevel(currentItem.qty);
-  applyFilters();
-  closeModal('restockModal');
-  showToast('+' + adding + ' pcs added to ' + currentItem.name, 'green');
+  const date   = document.getElementById('rs-date').value   || '';
+  const expiry = document.getElementById('rs-expiry').value || '';
+  const notes  = document.getElementById('rs-notes').value  || '';
+
+  fetch('save_stock.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'in', product_id: currentItem.id, qty: adding, date, expiry, notes })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      currentItem.qty  += adding;
+      currentItem.level = computeLevel(currentItem.qty);
+      applyFilters();
+      closeModal('restockModal');
+      showToast('+' + adding + ' pcs added to ' + currentItem.name, 'green');
+    } else {
+      showToast(data.message || 'Update failed', 'red');
+    }
+  })
+  .catch(() => showToast('Server error — check save_stock.php', 'red'));
 }
 
 /* ── Single Remove ── */
@@ -526,21 +543,30 @@ function saveBatch() {
   const valid = batchItems.filter(i => i.addQty > 0);
   if (!valid.length) { showToast('Please enter a quantity for at least one medicine', 'red'); return; }
 
-  valid.forEach(item => {
-    const target = stockData.find(p => p.id === item.id);
-    if (!target) return;
-    target.qty   += item.addQty;
-    target.level  = computeLevel(target.qty);
-  });
+  const payload = valid.map(i => ({ type: 'in', product_id: i.id, qty: i.addQty, date: '', expiry: '', notes: 'Batch restock' }));
 
-  const count = valid.length;
-  batchItems = [];
-  applyFilters();
-  closeModal('batchModal');
-  showToast(`Batch restock applied to ${count} product${count > 1 ? 's' : ''}`, 'green');
+  Promise.all(payload.map(item =>
+    fetch('save_stock.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(item)
+    }).then(r => r.json())
+  ))
+  .then(results => {
+    const allOk = results.every(r => r.success);
+    valid.forEach(item => {
+      const target = stockData.find(p => p.id === item.id);
+      if (target) { target.qty += item.addQty; target.level = computeLevel(target.qty); }
+    });
+    const count = valid.length;
+    batchItems = [];
+    applyFilters();
+    closeModal('batchModal');
+    showToast(`Batch restock applied to ${count} product${count > 1 ? 's' : ''}`, allOk ? 'green' : 'red');
+  })
+  .catch(() => showToast('Server error — check save_stock.php', 'red'));
 }
 
-/* ── Shared ── */
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
 }
@@ -556,7 +582,6 @@ function showToast(msg, type = 'green') {
   setTimeout(() => t.classList.remove('show'), 3200);
 }
 
-/* ── Init ── */
 applyFilters();
 </script>
 </body>
