@@ -1,6 +1,4 @@
 <?php
-// config.php — Database connection
-// Change these to match your server (XAMPP defaults shown)
 
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
