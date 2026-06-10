@@ -5,7 +5,6 @@ require_role('admin');
 
 $msg = ''; $msg_type = '';
 
-// ── APPROVE / CANCEL via POST ──────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id     = (int)($_POST['id'] ?? 0);
     $action = $_POST['action'] ?? '';
@@ -50,13 +49,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
 }
 
-// ── FILTERS ────────────────────────────────────────────────────────────────
 $filter = $_GET['status'] ?? 'All';
 $allowed = ['All','Pending','Approved','Cancelled'];
 if (!in_array($filter, $allowed)) $filter = 'All';
 $where = $filter === 'All' ? '' : "WHERE r.status = '$filter'";
 
-// ── RESERVATIONS ───────────────────────────────────────────────────────────
 $reservations = $conn->query(
     "SELECT r.id, u.username, p.product_name, p.category, p.price,
             r.quantity, r.status, r.notes, r.reserved_at
@@ -67,7 +64,6 @@ $reservations = $conn->query(
      ORDER BY r.reserved_at DESC"
 );
 
-// ── COUNTS ─────────────────────────────────────────────────────────────────
 $counts = ['Total'=>0,'Pending'=>0,'Approved'=>0,'Cancelled'=>0];
 $cRes = $conn->query("SELECT status, COUNT(*) AS cnt FROM reservations GROUP BY status");
 while ($r = $cRes->fetch_assoc()) {
@@ -122,7 +118,6 @@ while ($r = $cRes->fetch_assoc()) {
     </div>
     <?php endif; ?>
 
-    <!-- STAT CARDS -->
     <div class="stat-cards">
       <div class="stat-card">
         <div class="label">Total</div>
@@ -146,7 +141,6 @@ while ($r = $cRes->fetch_assoc()) {
       </div>
     </div>
 
-    <!-- FILTER TABS -->
     <div class="filter-tabs">
       <?php foreach (['All','Pending','Approved','Cancelled'] as $f):
         $cls = ['All'=>'all','Pending'=>'pending','Approved'=>'approved','Cancelled'=>'cancelled'][$f];
@@ -158,7 +152,6 @@ while ($r = $cRes->fetch_assoc()) {
       <?php endforeach; ?>
     </div>
 
-    <!-- TABLE -->
     <div class="panel">
       <table class="data-table">
         <thead>
