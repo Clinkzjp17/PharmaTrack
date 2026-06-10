@@ -1,12 +1,4 @@
 <?php
-// auth_guard.php
-// Include this at the TOP of any page that requires login.
-//
-// Usage:
-//   require_once 'auth_guard.php';
-//   require_login();           // any logged-in user
-//   require_role('admin');     // admins only
-
 require_once 'config.php';
 
 function require_login() {
