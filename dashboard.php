@@ -2,6 +2,57 @@
 require_once 'config.php';
 require_once 'auth_guard.php';
 require_role('admin');
+
+$counts = ['total' => 0, 'In Stock' => 0, 'Low Stock' => 0, 'Out of Stock' => 0];
+$cntRes = $conn->query("SELECT status, COUNT(*) AS cnt FROM products GROUP BY status");
+while ($r = $cntRes->fetch_assoc()) {
+    $counts[$r['status']] = (int)$r['cnt'];
+    $counts['total']     += (int)$r['cnt'];
+}
+
+$pendingRes = $conn->query("SELECT COUNT(*) AS cnt FROM reservations WHERE status='Pending'")->fetch_assoc()['cnt'];
+
+$invRes = $conn->query(
+    "SELECT product_name, category, quantity, price, status
+     FROM products
+     ORDER BY product_name ASC
+     LIMIT 10"
+);
+
+$alertRes = $conn->query(
+    "SELECT product_name, status, quantity
+     FROM products
+     WHERE status IN ('Low Stock','Out of Stock')
+     ORDER BY FIELD(status,'Out of Stock','Low Stock'), product_name ASC
+     LIMIT 8"
+);
+
+$stockInRes = $conn->query(
+    "SELECT sl.quantity, sl.date, p.id AS pid, p.product_name, p.category
+     FROM stock_logs sl
+     JOIN products p ON p.id = sl.product_id
+     WHERE sl.type = 'in'
+     ORDER BY sl.created_at DESC
+     LIMIT 5"
+);
+
+$stockOutRes = $conn->query(
+    "SELECT sl.quantity, sl.date, p.id AS pid, p.product_name, p.category
+     FROM stock_logs sl
+     JOIN products p ON p.id = sl.product_id
+     WHERE sl.type = 'out'
+     ORDER BY sl.created_at DESC
+     LIMIT 5"
+);
+
+function badgeClass(string $s): string {
+    return match($s) {
+        'In Stock'     => 'badge-green',
+        'Low Stock'    => 'badge-orange',
+        'Out of Stock' => 'badge-red',
+        default        => 'badge-green',
+    };
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -15,59 +66,8 @@ require_role('admin');
 </head>
 <body>
 
-<!-- SIDEBAR -->
-<div class="sidebar">
-  <div class="sidebar-logo">
-    <div class="logo-icon"></div>
-    <div class="logo-text">
-      <h3>PharmaTrack</h3>
-      <span>Admin</span>
-    </div>
-  </div>
+<?php include 'sidebar.php'; ?>
 
-  <nav class="sidebar-nav">
-    <div class="sidebar-section-label">MAIN</div>
-    <a href="dashboard.php" class="active">
-      <i class="fa-solid fa-chart-bar"></i>
-      <span>Dashboard</span>
-    </a>
-    <a href="products.php">
-      <i class="fa-solid fa-capsules"></i>
-      <span>Products</span>
-    </a>
-    <a href="stocks.php">
-      <i class="fa-solid fa-cart-shopping"></i>
-      <span>Stocks</span>
-    </a>
-    <a href="users.php">
-      <i class="fa-solid fa-user"></i>
-      <span>Users</span>
-    </a>
-
-    <div class="sidebar-section-label">MONITORING</div>
-    <a href="expiry.php">
-      <i class="fa-regular fa-clock"></i>
-      <span>Expiry</span>
-    </a>
-    <a href="lowstock.php">
-      <i class="fa-solid fa-triangle-exclamation"></i>
-      <span>Low Stock</span>
-    </a>
-  </nav>
-
-  <div class="sidebar-footer">
-    <div class="avatar">AD</div>
-    <div class="admin-info">
-      <div class="name"><?= htmlspecialchars($_SESSION['username']) ?></div>
-      <div class="role">Administrator</div>
-    </div>
-    <a href="logout.php" class="logout-btn" title="Logout">
-      <i class="fa-solid fa-right-from-bracket"></i>
-    </a>
-  </div>
-</div>
-
-<!-- MAIN CONTENT -->
 <div class="main-content">
 
   <div class="page-header">
@@ -79,23 +79,30 @@ require_role('admin');
     <div class="stat-cards">
       <div class="stat-card">
         <div class="label">Total Products</div>
-        <div class="value">250</div>
-        <div class="sub green">+ 3 this week</div>
+        <div class="value"><?= $counts['total'] ?></div>
+        <div class="sub green">All registered products</div>
       </div>
       <div class="stat-card">
         <div class="label">In Stock</div>
-        <div class="value">270</div>
-        <div class="sub green">89.78% of total products</div>
+        <div class="value"><?= $counts['In Stock'] ?></div>
+        <div class="sub green">
+          <?= $counts['total'] > 0 ? number_format($counts['In Stock'] / $counts['total'] * 100, 2) : 0 ?>% of total products
+        </div>
       </div>
       <div class="stat-card">
         <div class="label">Low Stock</div>
-        <div class="value">20</div>
+        <div class="value"><?= $counts['Low Stock'] ?></div>
         <div class="sub orange">Needs restocking</div>
       </div>
       <div class="stat-card">
         <div class="label">Out of Stock</div>
-        <div class="value">2</div>
+        <div class="value"><?= $counts['Out of Stock'] ?></div>
         <div class="sub red">Urgent reorder</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Pending Reservations</div>
+        <div class="value"><?= $pendingRes ?></div>
+        <div class="sub orange"><a href="reservations_admin.php?status=Pending" style="color:inherit;">Needs review →</a></div>
       </div>
     </div>
 
@@ -114,58 +121,41 @@ require_role('admin');
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>Biogesic</td>
-              <td>Analgesic</td>
-              <td>100</td>
-              <td>₱6.00</td>
-              <td><span class="badge badge-green">In Stock</span></td>
-            </tr>
-            <tr>
-              <td>Neozep</td>
-              <td>Analgesic</td>
-              <td>150</td>
-              <td>₱6.00</td>
-              <td><span class="badge badge-green">In Stock</span></td>
-            </tr>
-            <tr>
-              <td>Cetirizine</td>
-              <td>Antihistamine</td>
-              <td>10</td>
-              <td>₱10.00</td>
-              <td><span class="badge badge-orange">Low Stock</span></td>
-            </tr>
-            <tr>
-              <td>Amoxicillin</td>
-              <td>Antibiotic</td>
-              <td>0</td>
-              <td>₱10.00</td>
-              <td><span class="badge badge-red">Out of Stock</span></td>
-            </tr>
+            <?php if ($invRes->num_rows === 0): ?>
+              <tr><td colspan="5" style="text-align:center;color:#888;padding:1.5rem;">No products found.</td></tr>
+            <?php else: ?>
+              <?php while ($row = $invRes->fetch_assoc()): ?>
+              <tr>
+                <td><?= htmlspecialchars($row['product_name']) ?></td>
+                <td><?= htmlspecialchars($row['category']) ?></td>
+                <td><?= (int)$row['quantity'] ?></td>
+                <td>₱<?= number_format((float)$row['price'], 2) ?></td>
+                <td><span class="badge <?= badgeClass($row['status']) ?>"><?= htmlspecialchars($row['status']) ?></span></td>
+              </tr>
+              <?php endwhile; ?>
+            <?php endif; ?>
           </tbody>
         </table>
       </div>
 
-      <!-- ALERTS -->
       <div class="panel">
         <div class="panel-header">Alerts</div>
         <ul class="alert-list">
-          <li>
-            <span>Cetirizine is low on stock</span>
-            <span class="date">April 10, 2026</span>
-          </li>
-          <li>
-            <span>Amoxicillin is out of stock</span>
-            <span class="date">April 10, 2026</span>
-          </li>
-          <li>
-            <span>Biogesic expires in 2 days</span>
-            <span class="date">April 9, 2026</span>
-          </li>
-          <li>
-            <span>Neozep 5 pcs left</span>
-            <span class="date">April 8, 2026</span>
-          </li>
+          <?php if ($alertRes->num_rows === 0): ?>
+            <li><span style="color:#888;">No alerts — all stock levels OK.</span></li>
+          <?php else: ?>
+            <?php while ($a = $alertRes->fetch_assoc()): ?>
+            <li>
+              <span>
+                <?= htmlspecialchars($a['product_name']) ?>
+                <?= $a['status'] === 'Out of Stock'
+                    ? 'is out of stock'
+                    : 'is low on stock (' . (int)$a['quantity'] . ' pcs left)' ?>
+              </span>
+              <span class="date"><?= date('F j, Y') ?></span>
+            </li>
+            <?php endwhile; ?>
+          <?php endif; ?>
         </ul>
       </div>
     </div>
@@ -175,66 +165,42 @@ require_role('admin');
       <div class="panel">
         <div class="panel-header">Recent Stock In</div>
         <ul class="alert-list stock-list">
-          <li>
-            <div class="medicine-info">
-              <div class="name">Biogesic</div>
-              <div class="cat">Analgesic</div>
-            </div>
-            <span class="qty">+50 pcs</span>
-            <span class="date">April 10, 2026</span>
-            <button class="btn-stock-in">Stock in</button>
-          </li>
-          <li>
-            <div class="medicine-info">
-              <div class="name">Neozep</div>
-              <div class="cat">Analgesic</div>
-            </div>
-            <span class="qty">+50 pcs</span>
-            <span class="date">April 10, 2026</span>
-            <button class="btn-stock-in">Stock in</button>
-          </li>
-          <li>
-            <div class="medicine-info">
-              <div class="name">Cetirizine</div>
-              <div class="cat">Antihistamine</div>
-            </div>
-            <span class="qty">+50 pcs</span>
-            <span class="date">April 10, 2026</span>
-            <button class="btn-stock-in">Stock in</button>
-          </li>
+          <?php if ($stockInRes->num_rows === 0): ?>
+            <li><span style="color:#888;">No recent stock-in records.</span></li>
+          <?php else: ?>
+            <?php while ($si = $stockInRes->fetch_assoc()): ?>
+            <li>
+              <div class="medicine-info">
+                <div class="name"><?= htmlspecialchars($si['product_name']) ?></div>
+                <div class="cat"><?= htmlspecialchars($si['category']) ?></div>
+              </div>
+              <span class="qty">+<?= (int)$si['quantity'] ?> pcs</span>
+              <span class="date"><?= date('F j, Y', strtotime($si['date'])) ?></span>
+              <a href="stocks.php"><button class="btn-stock-in">Stock in</button></a>
+            </li>
+            <?php endwhile; ?>
+          <?php endif; ?>
         </ul>
       </div>
 
       <div class="panel">
         <div class="panel-header">Recent Stock Out</div>
         <ul class="alert-list stock-list">
-          <li>
-            <div class="medicine-info">
-              <div class="name">Biogesic</div>
-              <div class="cat">Analgesic</div>
-            </div>
-            <span class="qty">-50 pcs</span>
-            <span class="date">April 10, 2026</span>
-            <button class="btn-stock-out">Stock out</button>
-          </li>
-          <li>
-            <div class="medicine-info">
-              <div class="name">Neozep</div>
-              <div class="cat">Analgesic</div>
-            </div>
-            <span class="qty">-50 pcs</span>
-            <span class="date">April 10, 2026</span>
-            <button class="btn-stock-out">Stock out</button>
-          </li>
-          <li>
-            <div class="medicine-info">
-              <div class="name">Cetirizine</div>
-              <div class="cat">Antihistamine</div>
-            </div>
-            <span class="qty">-50 pcs</span>
-            <span class="date">April 10, 2026</span>
-            <button class="btn-stock-out">Stock out</button>
-          </li>
+          <?php if ($stockOutRes->num_rows === 0): ?>
+            <li><span style="color:#888;">No recent stock-out records.</span></li>
+          <?php else: ?>
+            <?php while ($so = $stockOutRes->fetch_assoc()): ?>
+            <li>
+              <div class="medicine-info">
+                <div class="name"><?= htmlspecialchars($so['product_name']) ?></div>
+                <div class="cat"><?= htmlspecialchars($so['category']) ?></div>
+              </div>
+              <span class="qty">-<?= (int)$so['quantity'] ?> pcs</span>
+              <span class="date"><?= date('F j, Y', strtotime($so['date'])) ?></span>
+              <a href="stocks.php"><button class="btn-stock-out">Stock out</button></a>
+            </li>
+            <?php endwhile; ?>
+          <?php endif; ?>
         </ul>
       </div>
 
