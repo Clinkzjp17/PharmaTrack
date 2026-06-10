@@ -1,3 +1,8 @@
+<?php
+require_once 'config.php';
+require_once 'auth_guard.php';
+require_role('admin');
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,7 +15,7 @@
 </head>
 <body>
 
-<?php include 'includes/sidebar.php'; ?>
+<?php include('sidebar.php'); ?>
 
 <div class="main-content">
   <div class="page-header">
@@ -59,7 +64,6 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th><input type="checkbox" id="select-all" onchange="toggleSelectAll(this)"></th>
             <th>Product</th>
             <th>Category</th>
             <th>Quantity</th>
@@ -240,18 +244,26 @@
 </div>
 
 <script>
-let expiryData = [
-  { id:1, name:'Biogesic 500mg',    category:'Analgesic',        qty:100, daysLeft:'3 months',  expiry:'Mar 11, 2026', status:'ok' },
-  { id:2, name:'Neozep Forte',      category:'Cold & Flu',       qty:40,  daysLeft:'2 weeks',   expiry:'Jun 17, 2026', status:'soon' },
-  { id:3, name:'Amoxicillin 500mg', category:'Antibiotic',       qty:25,  daysLeft:'Expired',   expiry:'Jan 11, 2026', status:'expired' },
-  { id:4, name:'Cetirizine 10mg',   category:'Antihistamine',    qty:60,  daysLeft:'1 month',   expiry:'Jul 2, 2026',  status:'soon' },
-  { id:5, name:'Losartan 50mg',     category:'Antihypertensive', qty:80,  daysLeft:'3 weeks',   expiry:'Jun 24, 2026', status:'soon' },
-];
-
+let expiryData   = [];
 let currentItem  = null;
 let disposalMethod = 'returned';
 let selectedIds  = new Set();
-let filteredData = [...expiryData];
+let filteredData = [];
+
+function loadExpiryData() {
+  fetch('get_expiry.php')
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        expiryData   = data.data;
+        filteredData = [...expiryData];
+        applyFilters();
+      } else {
+        showToast('Failed to load expiry data: ' + (data.message || 'unknown error'), 'red');
+      }
+    })
+    .catch(() => showToast('Could not reach get_expiry.php', 'red'));
+}
 
 function updateStatCards() {
   document.getElementById('count-expired').textContent = expiryData.filter(p => p.status === 'expired').length;
@@ -268,7 +280,6 @@ function daysClass(status) {
 function renderTable() {
   document.getElementById('expiry-tbody').innerHTML = filteredData.map(p => `
     <tr>
-      <td><input type="checkbox" class="row-check" data-id="${p.id}" onchange="toggleCheck(${p.id}, this.checked)" ${selectedIds.has(p.id) ? 'checked' : ''}></td>
       <td><div class="product-name">${p.name}</div></td>
       <td>${p.category}</td>
       <td>${p.qty} pcs</td>
@@ -281,8 +292,10 @@ function renderTable() {
     </tr>
   `).join('');
 
-  document.getElementById('select-all').checked =
-    filteredData.length > 0 && filteredData.every(p => selectedIds.has(p.id));
+  const selectAll = document.getElementById('select-all');
+  if (selectAll) {
+    selectAll.checked = filteredData.length > 0 && filteredData.every(p => selectedIds.has(p.id));
+  }
 
   updateStatCards();
 }
@@ -300,8 +313,10 @@ function applyFilters() {
 
 function toggleCheck(id, checked) {
   checked ? selectedIds.add(id) : selectedIds.delete(id);
-  document.getElementById('select-all').checked =
-    filteredData.length > 0 && filteredData.every(p => selectedIds.has(p.id));
+  const selectAll = document.getElementById('select-all');
+  if (selectAll) {
+    selectAll.checked = filteredData.length > 0 && filteredData.every(p => selectedIds.has(p.id));
+  }
 }
 
 function toggleSelectAll(cb) {
@@ -322,11 +337,27 @@ function openUpdate(id) {
 
 function saveUpdate() {
   if (!currentItem) return;
-  const qty = parseInt(document.getElementById('u-qty').value);
-  if (!isNaN(qty)) currentItem.qty = qty;
-  applyFilters();
-  closeModal('updateModal');
-  showToast('Expiry details updated for ' + currentItem.name, 'green');
+  const qty    = parseInt(document.getElementById('u-qty').value);
+  const expiry = document.getElementById('u-expiry-date').value;
+  const batch  = document.getElementById('u-batch').value.trim();
+  const notes  = document.getElementById('u-notes').value.trim();
+
+  fetch('update_expiry.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: currentItem.id, qty, expiry, batch, notes })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      closeModal('updateModal');
+      showToast('Expiry details updated for ' + currentItem.name, 'green');
+      loadExpiryData(); // refresh from DB so daysLeft & status recompute correctly
+    } else {
+      showToast(data.message || 'Update failed', 'red');
+    }
+  })
+  .catch(() => showToast('Server error — check update_expiry.php', 'red'));
 }
 
 function openRemove(id) {
@@ -342,12 +373,26 @@ function openRemove(id) {
 
 function confirmRemove() {
   if (!currentItem) return;
-  const idx = expiryData.findIndex(p => p.id === currentItem.id);
-  if (idx > -1) expiryData.splice(idx, 1);
-  selectedIds.delete(currentItem.id);
-  applyFilters();
-  closeModal('removeModal');
-  showToast(currentItem.name + ' removed from inventory', 'red');
+  const dateRemoved = document.getElementById('r-date').value;
+  const notes       = document.getElementById('r-notes').value.trim();
+
+  fetch('remove_expiry.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: currentItem.id, disposal: disposalMethod, date_removed: dateRemoved, notes })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      selectedIds.delete(currentItem.id);
+      closeModal('removeModal');
+      showToast(currentItem.name + ' removed from inventory', 'red');
+      loadExpiryData();
+    } else {
+      showToast(data.message || 'Removal failed', 'red');
+    }
+  })
+  .catch(() => showToast('Server error — check remove_expiry.php', 'red'));
 }
 
 let batchItems = []; 
@@ -461,19 +506,30 @@ function removeBatchItem(idx) {
 
 function saveBatch() {
   if (!batchItems.length) return;
-  batchItems.forEach(item => {
-    const target = expiryData.find(p => p.id === item.id);
-    if (!target) return;
-    if (item.newExpiry) {
-      target.expiry = new Date(item.newExpiry).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  const payload = batchItems.map(item => ({
+    id:        item.id,
+    newExpiry: item.newExpiry,
+    newQty:    item.newQty,
+  }));
+
+  fetch('batch_update_expiry.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(r => r.json())
+  .then(data => {
+    const count = batchItems.length;
+    batchItems = [];
+    closeModal('batchModal');
+    if (data.success) {
+      showToast(`Batch update applied to ${count} product${count > 1 ? 's' : ''}`, 'green');
+    } else {
+      showToast(data.message || 'Some items failed to update', 'red');
     }
-    target.qty = item.newQty;
-  });
-  const count = batchItems.length;
-  batchItems = [];
-  applyFilters();
-  closeModal('batchModal');
-  showToast(`Batch update applied to ${count} product${count > 1 ? 's' : ''}`, 'green');
+    loadExpiryData();
+  })
+  .catch(() => showToast('Server error — check batch_update_expiry.php', 'red'));
 }
 
 function closeModal(id) {
@@ -497,7 +553,7 @@ function showToast(msg, type = 'green') {
   setTimeout(() => t.classList.remove('show'), 3200);
 }
 
-applyFilters();
+loadExpiryData();
 </script>
 </body>
 </html>
