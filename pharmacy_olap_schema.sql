@@ -1,3 +1,4 @@
+CREATE DATABASE IF NOT EXISTS sales_dw;
 USE sales_dw;
 DELIMITER $$
 
